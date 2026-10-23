@@ -1,0 +1,42 @@
+project_name: AncientRPG-Client
+language_servers:
+- java
+encoding: utf-8
+activation_command:
+activation_command_timeout: 180.0
+line_ending:
+language_backend:
+ignore_all_files_in_gitignore: true
+ls_specific_settings:
+  java:
+    gradle_wrapper_enabled: true
+    use_system_java_home: true
+ls_workspace_folders:
+- .
+ls_additional_workspace_folders: []
+ignored_paths:
+- '**/.git/**'
+- '**/.gradle/**'
+- '**/build/**'
+- '**/bin/**'
+- '**/run/**'
+- '**/.aws/**'
+- '**/.codex/**'
+- '**/.agents/**'
+- '**/.serena/**'
+read_only: false
+excluded_tools: []
+included_optional_tools:
+- restart_language_server
+fixed_tools: []
+default_modes:
+added_modes:
+initial_prompt: Public AncientRPG Fabric client and pure Java protocol
+  contracts. Read AGENTS.md and docs/serena.md before Java work. Prefer Serena
+  symbol and refactoring tools. Never load private backend sources or memories
+  into this project. Keep protocol independent of Fabric and Minestom classes.
+  First-party source/assets are All Rights Reserved. Specs require manual review
+  before implementation.
+symbol_info_budget:
+read_only_memory_patterns: []
+ignored_memory_patterns: []

@@ -54,6 +54,10 @@ protocol assertions as JUnit but does not test the Fabric adapter or launch Mine
 
 ## Structure and CI
 
+Use Serena for Java navigation and reference-aware refactoring. The checked-in
+`AncientRPG-Client` profile and [setup/usage guide](docs/serena.md) cover activation,
+Java 25 indexing, local overrides, and verification. Read `AGENTS.md` before changes.
+
 - `protocol/`: wire contracts, canonical public-content hashing, and shared client assets.
 - `client-mod/`: Fabric registration, configuration/play payloads, and input/rendering adapters.
 - `docs/protocol.md`: wire format and compatibility rules.

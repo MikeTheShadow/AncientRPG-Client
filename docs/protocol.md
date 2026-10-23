@@ -84,7 +84,7 @@ from players in adjacent chunks. A request targets only the demo block; its curr
 reach, line of sight, mode, life state, and instance are validated at application
 time. The demo does not accept client-authored inventory or resulting block state.
 
-## Sword skills (wire v2, release 0.2.0-dev)
+## Sword skills (wire v3, release 0.3.0-dev)
 
 The original switch payloads retain their layouts. Skill-use, unlock and switch
 requests share one monotonically increasing sequence per connection, one token
@@ -98,12 +98,16 @@ Skill IDs: 0 Quick Cut, 1 Sweeping Arc, 2 Piercing Thrust, 3 Twin Fang,
 | --- | --- |
 | `ancientrpg:skill_use` | sequence int64, skill uint8 (exactly 9 bytes) |
 | `ancientrpg:skill_unlock` | sequence int64, skill uint8 (exactly 9 bytes) |
-| `ancientrpg:skill_state` | sequence int64, reason uint8, server tick int64, learned mask uint8, points uint8, five cooldown-end int64 values in skill-ID order, action-present uint8, optional action (60 or 101 bytes) |
-| `ancientrpg:skill_event` | server tick int64, actor entity ID int32, phase uint8, action, hit count uint8, zero to three hits (55–91 bytes) |
+| `ancientrpg:skill_state` | sequence int64, reason uint8, server tick int64, learned mask uint8, points uint8, five cooldown-end int64 values in skill-ID order, action-present uint8, optional action, queued-present uint8, optional queued sequence int64 and skill uint8 (61, 155 or 164 bytes) |
+| `ancientrpg:skill_event` | server tick int64, actor entity ID int32, phase uint8, action, hit count uint8, zero to three hits (108–144 bytes) |
 
-Action (41 bytes): globally increasing instance action ID int64, skill uint8,
+Action (94 bytes): globally increasing instance action ID int64, skill uint8,
 start tick int64, captured normalized aim x/y/z as three float64 values. This aim
 is server-observed presentation state, never input supplied by the skill request.
+Then six float64 coordinates: origin x/y/z and current authoritative feet x/y/z;
+locked horizontal yaw float32; flags uint8 (bit 0 blocked, bit 1 disabled; all
+other bits invalid). Coordinates must be finite with absolute value <=2e9, yaw
+finite. Queued state is owner-only, requires an action and nonnegative sequence.
 Hit (12 bytes): target entity ID int32, actual damage int32, remaining health int32.
 Damage is positive and <=24; health is 0–100. Duplicate target IDs within a strike
 are invalid. Only HIT events can contain hits. All ticks/IDs are nonnegative;
@@ -114,7 +118,7 @@ presence is 1; no other value is valid. Action start cannot follow snapshot/even
 time. Decoders reject malformed bounds before allocating variable collections.
 
 Reason ordinals: 0 OK, 1 LOCKED, 2 PREREQUISITES, 3 POINTS, 4 ALREADY_LEARNED,
-5 BUSY, 6 COOLDOWN, 7 INELIGIBLE, 8 QUEUE_PRESSURE, 9 DUPLICATE.
+5 BUSY, 6 COOLDOWN, 7 INELIGIBLE, 8 QUEUE_PRESSURE, 9 DUPLICATE, 10 QUEUED, 11 BUFFER_FULL.
 Phase ordinals: 0 START, 1 HIT, 2 END, 3 CANCEL, 4 SNAPSHOT, 5 REMOVE.
 
 Use/unlock responses carry the request sequence and current authoritative state.
@@ -136,11 +140,31 @@ malformed/out-of-phase payloads retain existing disconnect behavior.
 Request golden fixture `(sequence=1, Crescent Finish)`:
 `000000000000000104` on either request channel. Channel determines use vs unlock.
 A fresh state is `ffffffffffffffff00`, eight zero tick bytes, `0104`, forty zero
-cooldown bytes, then `00` (absent action). Tests verify these literal fixtures,
+cooldown bytes, then `0000` (absent action and queued successor). Tests verify these literal fixtures,
 all state/event round trips and malformed input handling using both Java buffers
 and actual Minecraft/Fabric buffer adapters.
 
 The manifest now additionally includes the training-sword item/model/texture,
 updated public names/content metadata, and `ancientrpg:training_sword=1538` in
-runtime mappings. Existing block IDs and demo item ID remain unchanged. Clients
-using v1 or the old manifest/release are rejected before gameplay.
+runtime mappings. Existing block IDs and demo item ID remain unchanged. The manifest also includes `ancientrpg/sword-motion.json` and canonical
+`animation/runtime.txt` keyframes/motion samples. Clients
+using older wire versions or the old manifest/release are rejected before gameplay.
+
+
+Accepted skills lock movement and equipment through recovery. Camera look stays
+free; current carry uses captured yaw and strikes use captured 3D aim. The server
+moves before contact checks, sweeps the full body, steps ordinary stairs/slabs,
+and stops carry at walls or unsupported edges. Lost support/equipment disables
+remaining carry/hits without shortening recovery. Forced relocation, death,
+instance/mode changes and disconnect cancel. The client predicts at most one tick
+of accepted motion with local collision checks; server samples always win.
+A single end-of-action position baseline requires the normal teleport acknowledgement;
+there are no per-tick self teleports.
+
+During the final three ticks, one fresh skill press may receive QUEUED. The first
+wins; later presses receive BUFFER_FULL. At recovery end, the successor is
+revalidated immediately with fresh observed aim; it receives OK or a correlated
+denial and never waits for a cooldown. END for the previous action precedes START
+for the successor. Completed IDs cannot resurrect client control locks; REMOVE
+only ends observation and allows the same active action to be observed again.
+Adjacent poses blend over two render ticks. Holding a key does not repeat casts.

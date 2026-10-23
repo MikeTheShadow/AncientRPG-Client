@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "curve": "smoothstep",
+  "profiles": [[0,1,4,0.7],[1,2,7,1.1],[2,2,6,2.8],[3,1,4,0.75],[3,6,9,0.85],[4,5,12,2.2]],
+  "successorWindowTicks": 3,
+  "blendTicks": 2,
+  "animationRevision": 1
+}

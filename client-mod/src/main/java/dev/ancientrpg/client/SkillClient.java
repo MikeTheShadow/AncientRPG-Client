@@ -2,7 +2,6 @@ package dev.ancientrpg.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
 import dev.ancientrpg.protocol.Skill;
 import dev.ancientrpg.protocol.SkillRequest;
 import dev.ancientrpg.protocol.SkillWire;
@@ -34,6 +33,7 @@ public final class SkillClient {
   private final KeyMapping[] keys = new KeyMapping[6];
   private final SkillInputEdge[] edges = new SkillInputEdge[6];
   private final Map<Integer, SkillWire.Action> actions = new HashMap<>();
+  private final SkillActionOrder order = new SkillActionOrder();
   private final Map<Integer, Long> effectTicks = new HashMap<>();
   private LongSupplier sequence;
   private SkillWire.State state;
@@ -100,8 +100,10 @@ public final class SkillClient {
 
   private void reset() {
     state = null;
+    SkillPresentation.reset();
     serverTick = 0;
     actions.clear();
+    order.clear();
     effectTicks.clear();
     pendingUnlock = -1;
     feedback = "";
@@ -114,22 +116,42 @@ public final class SkillClient {
     }
   }
 
+  public SkillWire.Action action(int actor) {
+    return actions.get(actor);
+  }
+
+  public long serverTick() {
+    return serverTick;
+  }
+
+  public boolean committed() {
+    var p = Minecraft.getInstance().player;
+    return p != null && actions.containsKey(p.getId());
+  }
+
   public double visualTick() {
     return serverTick + Math.min(1, Math.max(0, (System.nanoTime() - receivedAt) / 50_000_000.0));
   }
 
   private void accept(SkillWire.State value) {
-    if (state != null && value.tick() < state.tick()) return;
+    if (value.tick() < serverTick || (state != null && value.tick() < state.tick())) return;
     state = value;
     clock(value.tick());
     Minecraft mc = Minecraft.getInstance();
     if (mc.player != null) {
-      if (value.action() == null) actions.remove(mc.player.getId());
-      else actions.put(mc.player.getId(), value.action());
+      var previous = actions.get(mc.player.getId());
+      if (value.action() == null
+          || (order.accepts(mc.player.getId(), value.action().id())
+              && (previous == null || value.action().id() >= previous.id()))) {
+        SkillPresentation.changed(mc.player.getId(), previous, value.action(), value.tick());
+        if (value.action() == null) actions.remove(mc.player.getId());
+        else actions.put(mc.player.getId(), value.action());
+      }
     }
     if (value.sequence() == pendingUnlock) pendingUnlock = -1;
-    if (value.sequence() >= 0 && value.reason() != SkillWire.Reason.OK)
-      message(reason(value.reason()));
+    if (value.sequence() >= 0
+        && value.reason() != SkillWire.Reason.OK
+        && value.reason() != SkillWire.Reason.QUEUED) message(reason(value.reason()));
   }
 
   private void accept(SkillWire.Event event) {
@@ -139,16 +161,25 @@ public final class SkillClient {
     if (current != null && current.id() > event.action().id()) return;
     switch (event.phase()) {
       case START, SNAPSHOT -> {
-        if (event.tick() >= previous
-            && event.tick() - event.action().start() < event.action().skill().duration())
+        if (order.accepts(event.actor(), event.action().id())
+            && event.tick() >= previous
+            && event.tick() - event.action().start() < event.action().skill().duration()) {
+          SkillPresentation.changed(event.actor(), current, event.action(), event.tick());
           actions.put(event.actor(), event.action());
+        }
       }
       case END, CANCEL, REMOVE -> {
-        actions.remove(event.actor());
-        effectTicks.remove(event.actor());
+        if (event.tick() < previous) return;
+        if (event.phase() != SkillWire.Phase.REMOVE)
+          order.finish(event.actor(), event.action().id());
+        if (current == null || current.id() == event.action().id()) {
+          SkillPresentation.changed(event.actor(), current, null, event.tick());
+          actions.remove(event.actor());
+          effectTicks.remove(event.actor());
+        }
       }
       case HIT -> {
-        if (event.tick() < previous) return;
+        if (event.tick() < previous || !order.accepts(event.actor(), event.action().id())) return;
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null) return;
         var actor = mc.level.getEntity(event.actor());
@@ -207,12 +238,7 @@ public final class SkillClient {
       message("Unlock not confirmed; try again");
     }
     if (mc.level == null) return;
-    actions
-        .entrySet()
-        .removeIf(
-            e ->
-                mc.level.getEntity(e.getKey()) == null
-                    || serverTick - e.getValue().start() >= e.getValue().skill().duration());
+    actions.entrySet().removeIf(e -> mc.level.getEntity(e.getKey()) == null);
     effectTicks.keySet().retainAll(actions.keySet());
     for (var e : actions.entrySet()) {
       var actor = mc.level.getEntity(e.getKey());
@@ -225,17 +251,10 @@ public final class SkillClient {
       Vec3 side = aim.cross(new Vec3(0, 1, 0)).normalize();
       if (side.lengthSqr() < 0.1) side = new Vec3(1, 0, 0);
       Vec3 up = side.cross(aim).normalize();
-      double phase = elapsed / a.skill().duration();
-      double angle =
-          switch (a.skill()) {
-            case QUICK_CUT -> -0.8 + phase * 1.6;
-            case SWEEPING_ARC -> -1.3 + phase * 2.6;
-            case PIERCING_THRUST -> 0;
-            case TWIN_FANG -> (phase < 0.5 ? -1 + phase * 4 : 3 - phase * 4);
-            case CRESCENT_FINISH -> -1.6 + phase * 3.2;
-          };
-      double reach =
-          a.skill() == Skill.PIERCING_THRUST ? 0.5 + Math.sin(phase * Math.PI) * 2.5 : 1.5;
+      if (!dev.ancientrpg.protocol.SwordAnimation.striking(a.skill(), elapsed)) continue;
+      var pose = dev.ancientrpg.protocol.SwordAnimation.sample(a.skill(), elapsed);
+      double angle = pose.yaw() + pose.roll() * .35;
+      double reach = 1.2 + pose.thrust();
       Vec3 tip =
           actor
               .getEyePosition()
@@ -247,37 +266,7 @@ public final class SkillClient {
   }
 
   public void transform(PoseStack pose) {
-    Minecraft mc = Minecraft.getInstance();
-    if (mc.player == null) return;
-    var a = actions.get(mc.player.getId());
-    if (a == null) return;
-    double t = (visualTick() - a.start()) / a.skill().duration();
-    if (t < 0 || t >= 1) return;
-    float wave = (float) Math.sin(t * Math.PI);
-    switch (a.skill()) {
-      case QUICK_CUT -> {
-        pose.mulPose(Axis.ZP.rotationDegrees(65 * wave));
-        pose.translate(-0.3 * wave, 0, 0);
-      }
-      case SWEEPING_ARC -> {
-        pose.mulPose(Axis.YP.rotationDegrees(100 * wave));
-        pose.translate(-0.5 * wave, 0, 0);
-      }
-      case PIERCING_THRUST -> {
-        pose.mulPose(Axis.XP.rotationDegrees(-35 * wave));
-        pose.translate(0, 0, -0.8 * wave);
-      }
-      case TWIN_FANG -> {
-        float cut = (float) Math.sin(t * Math.PI * 2);
-        pose.mulPose(Axis.ZP.rotationDegrees(75 * cut));
-        pose.translate(-0.25 * cut, 0, 0);
-      }
-      case CRESCENT_FINISH -> {
-        pose.mulPose(Axis.ZP.rotationDegrees(-110 * wave));
-        pose.mulPose(Axis.XP.rotationDegrees(-45 * wave));
-        pose.translate(0, 0.3 * wave, -0.3 * wave);
-      }
-    }
+    SkillPresentation.hands(pose);
   }
 
   private void hud(GuiGraphicsExtractor g) {
@@ -303,6 +292,8 @@ public final class SkillClient {
               : remaining > 0 ? String.format(Locale.ROOT, "%.1fs", remaining / 20.0) : "Ready";
       g.text(mc.font, status, x + 4, y + 16, 0xFFE7EDF0);
     }
+    if (state.queued() != null)
+      g.text(mc.font, "Next: " + state.queued().skill().title(), left, y - 40, 0xFF80DDD0);
     if (state.action() != null) {
       double p =
           Math.clamp(
@@ -334,6 +325,8 @@ public final class SkillClient {
       case INELIGIBLE -> "Hold the practice sword with an empty offhand";
       case QUEUE_PRESSURE -> "Too many requests; try again";
       case DUPLICATE -> "Request already handled";
+      case QUEUED -> "Next skill queued";
+      case BUFFER_FULL -> "A follow-up is already queued";
       case OK -> "";
     };
   }

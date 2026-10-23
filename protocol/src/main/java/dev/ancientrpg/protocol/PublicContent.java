@@ -10,10 +10,11 @@ public final class PublicContent {
   public static final String BLOCK = "ancientrpg:demo_block";
   public static final String ITEM = "ancientrpg:demo_item";
   public static final String SWORD = "ancientrpg:training_sword";
-  public static final int WIRE_VERSION = 2;
+  public static final int WIRE_VERSION = 3;
   private static final List<String> ASSETS =
       List.of(
           "ancientrpg/content.json",
+          "ancientrpg/sword-motion.json",
           "assets/ancientrpg/models/item/training_sword.json",
           "assets/ancientrpg/items/training_sword.json",
           "assets/ancientrpg/textures/item/training_sword.png",
@@ -52,6 +53,7 @@ public final class PublicContent {
             + "="
             + swordId
             + "\n";
+    manifest.put("animation/runtime.txt", SwordAnimation.manifest());
     manifest.put("registry/runtime.txt", ids.getBytes(StandardCharsets.UTF_8));
     return new Compatibility(
         minecraftProtocol,

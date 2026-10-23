@@ -14,7 +14,7 @@ class SkillWireTest {
     var state =
         new SkillWire.State(-1, SkillWire.Reason.OK, 0, 1, 4, List.of(0L, 0L, 0L, 0L, 0L), null);
     assertEquals(
-        "ffffffffffffffff00" + "00".repeat(8) + "0104" + "00".repeat(41),
+        "ffffffffffffffff00" + "00".repeat(8) + "0104" + "00".repeat(42),
         HexFormat.of().formatHex(SkillWire.encodeState(state)));
     assertEquals(state, SkillWire.decodeState(SkillWire.encodeState(state)));
   }
@@ -24,7 +24,7 @@ class SkillWireTest {
     var a = new SkillWire.Action(7, Skill.TWIN_FANG, 12, 0, 0, 1);
     var state =
         new SkillWire.State(9, SkillWire.Reason.OK, 14, 31, 0, List.of(1L, 2L, 3L, 4L, 5L), a);
-    assertEquals(101, SkillWire.encodeState(state).length);
+    assertEquals(155, SkillWire.encodeState(state).length);
     assertEquals(state, SkillWire.decodeState(SkillWire.encodeState(state)));
     for (var phase : SkillWire.Phase.values()) {
       var e =

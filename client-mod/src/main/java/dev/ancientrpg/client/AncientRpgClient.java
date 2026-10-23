@@ -81,6 +81,7 @@ public final class AncientRpgClient implements ClientModInitializer {
         });
     UseBlockCallback.EVENT.register(
         (player, world, hand, hit) -> {
+          if (SkillClient.INSTANCE.committed()) return net.minecraft.world.InteractionResult.FAIL;
           if (!world.isClientSide()
               || world.getBlockState(hit.getBlockPos()).getBlock() != DemoRegistration.block) {
             return net.minecraft.world.InteractionResult.PASS;

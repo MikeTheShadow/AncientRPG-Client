@@ -3,7 +3,14 @@
   "package": "dev.ancientrpg.client.mixin",
   "compatibilityLevel": "JAVA_25",
   "client": [
-    "SwordPoseMixin"
+    "SwordPoseMixin",
+    "SkillMovementMixin",
+    "SkillBodyMixin",
+    "SkillFacingMixin",
+    "SkillControlsMixin",
+    "SkillScrollMixin",
+    "SkillInventoryMixin",
+    "SkillInputMixin"
   ],
   "injectors": {
     "defaultRequire": 1

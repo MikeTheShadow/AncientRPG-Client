@@ -29,7 +29,7 @@ The generated `client-mod/build/demo-mods/` folder contains the AncientRPG mod J
 (with protocol/assets nested) and the pinned Fabric API JAR. Copy both JARs into a
 clean Minecraft **26.2** profile's `mods/` directory using Fabric Loader **0.19.3**.
 Launch through your normal authenticated Minecraft launcher, then join the local
-server at `127.0.0.1:25565`. The development release is `0.2.0-dev`.
+server at `127.0.0.1:25565`. The development release is `0.3.0-dev`.
 
 For client-only development, Loom's `:client-mod:runClient` is available; its default
 development identity is unsuitable for the online-authenticated server. Use your
@@ -68,7 +68,7 @@ private server code, encounter logic, or credentials to this repository.
 
 ## One-Handed Sword Training
 
-The matching `0.2.0-dev` client/server includes exactly five skills: Quick Cut,
+The matching `0.3.0-dev` client/server includes exactly five skills: Quick Cut,
 Sweeping Arc, Piercing Thrust, Twin Fang, and Crescent Finish. Select the Practice
 Sword in hotbar slot 2, leave the offhand empty, and walk east to the marked area
 around x=24–38, z=1–9. The original switch remains at spawn.
@@ -85,6 +85,16 @@ defeat. They do not fight back or grant rewards. Aim at their body centers;
 Piercing Thrust is deliberately narrow. The wall lane tests obstruction. This
 slice has fixed damage and no leveling, persistence, stamina or PvP.
 
-Build both matching checkouts before testing; old `0.1.0-dev` distributions and
+Build both matching checkouts before testing; older distributions and
 client JARs are incompatible. First-person animation, screen layout and two-client
 observation still require live verification for this feature.
+
+
+Each accepted skill carries you forward: Cut 0.7 blocks, Arc 1.1, Thrust 2.8,
+Twin Fang 0.75 + 0.85, and Finish 2.2. Start grounded. Movement, jumping,
+equipment changes and interactions remain locked until recovery finishes;
+looking around stays free. Walls and edges stop travel. Press one learned skill
+during the final three ticks to queue a follow-up; it starts only if eligible at
+the end. First-person hands and third-person body keyframes follow the strike
+phases, with a short blend between chained actions. These visuals still require
+real-client acceptance testing, including left-handed mode and latency.

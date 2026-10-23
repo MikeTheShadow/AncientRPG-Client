@@ -74,7 +74,10 @@ Sword in hotbar slot 2, leave the offhand empty, and walk east to the marked are
 around x=24–38, z=1–9. The original switch remains at spawn.
 
 Default bindings are **Z / X / C / V / B** in that skill order; **K** opens the
-skill tree. Rebind them in Minecraft Controls. Quick Cut is learned initially;
+Sword Arts picker. Select a skill card to inspect its damage, timing, carry and
+prerequisites, then use **Learn / 1 point** to unlock it. The picker uses custom
+navy/teal/gold panels, with a compact list at smaller GUI sizes. Tab and Enter/Space
+operate the controls; Escape closes the picker. Rebind keys in Minecraft Controls. Quick Cut is learned initially;
 four practice points unlock the other nodes. Crescent Finish requires Twin Fang
 and Piercing Thrust. Points/unlocks are session-only and reset on reconnect.
 All skills wait for server acceptance, share an action lock and have independent

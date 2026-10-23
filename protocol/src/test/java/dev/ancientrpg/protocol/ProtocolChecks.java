@@ -88,13 +88,22 @@ public final class ProtocolChecks {
     eq(
         "62b581615b4611cb5f3d970261c24090e3bec9e3fd60491c71fa409b0ffc0584",
         ContentManifest.fingerprint(Map.of()));
-    var actual = PublicContent.identity(776, 1196, 32366, 32367, 1537);
+    var actual = PublicContent.identity(776, 1196, 32366, 32367, 1537, 1538);
     eq(actual, WireCodec.decodeCompatibility(WireCodec.encodeCompatibility(actual)));
     check(
-        !actual.manifest().equals(PublicContent.identity(776, 1196, 32367, 32366, 1537).manifest()),
+        !actual
+            .manifest()
+            .equals(PublicContent.identity(776, 1196, 32366, 32367, 1537, 1539).manifest()),
+        "Training sword mapping participates in compatibility");
+    check(
+        !actual
+            .manifest()
+            .equals(PublicContent.identity(776, 1196, 32367, 32366, 1537, 1538).manifest()),
         "Block state mapping participates in compatibility");
     check(
-        !actual.manifest().equals(PublicContent.identity(776, 1196, 32366, 32367, 1538).manifest()),
+        !actual
+            .manifest()
+            .equals(PublicContent.identity(776, 1196, 32366, 32367, 1538, 1538).manifest()),
         "Item ID participates in compatibility");
   }
 

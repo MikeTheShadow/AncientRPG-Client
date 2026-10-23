@@ -7,5 +7,6 @@
   "blockTemplate": "minecraft:stone",
   "itemTemplate": "minecraft:stick",
   "minecraft": "26.2",
-  "minestomData": "26.2-rv3"
+  "minestomData": "26.2-rv3",
+  "trainingSword": "ancientrpg:training_sword"
 }

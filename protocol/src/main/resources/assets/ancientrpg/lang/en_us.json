@@ -1,4 +1,11 @@
 {
   "block.ancientrpg.demo_block": "Ancient Switch",
-  "item.ancientrpg.demo_item": "Ancient Shard"
+  "item.ancientrpg.demo_item": "Ancient Shard",
+  "item.ancientrpg.training_sword": "Practice Sword",
+  "key.ancientrpg.quick_cut": "Quick Cut",
+  "key.ancientrpg.sweeping_arc": "Sweeping Arc",
+  "key.ancientrpg.piercing_thrust": "Piercing Thrust",
+  "key.ancientrpg.twin_fang": "Twin Fang",
+  "key.ancientrpg.crescent_finish": "Crescent Finish",
+  "key.ancientrpg.tree": "Sword Skill Tree"
 }

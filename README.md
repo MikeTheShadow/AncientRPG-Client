@@ -29,7 +29,7 @@ The generated `client-mod/build/demo-mods/` folder contains the AncientRPG mod J
 (with protocol/assets nested) and the pinned Fabric API JAR. Copy both JARs into a
 clean Minecraft **26.2** profile's `mods/` directory using Fabric Loader **0.19.3**.
 Launch through your normal authenticated Minecraft launcher, then join the local
-server at `127.0.0.1:25565`. The development release is `0.1.0-dev`.
+server at `127.0.0.1:25565`. The development release is `0.2.0-dev`.
 
 For client-only development, Loom's `:client-mod:runClient` is available; its default
 development identity is unsuitable for the online-authenticated server. Use your
@@ -65,3 +65,26 @@ Java 25 indexing, local overrides, and verification. Read `AGENTS.md` before cha
 The prepared GitHub Actions workflow checks Linux and Windows. Hosted execution,
 remote setup, branch protection, and artifact publishing remain TODOs. Never add
 private server code, encounter logic, or credentials to this repository.
+
+## One-Handed Sword Training
+
+The matching `0.2.0-dev` client/server includes exactly five skills: Quick Cut,
+Sweeping Arc, Piercing Thrust, Twin Fang, and Crescent Finish. Select the Practice
+Sword in hotbar slot 2, leave the offhand empty, and walk east to the marked area
+around x=24–38, z=1–9. The original switch remains at spawn.
+
+Default bindings are **Z / X / C / V / B** in that skill order; **K** opens the
+skill tree. Rebind them in Minecraft Controls. Quick Cut is learned initially;
+four practice points unlock the other nodes. Crescent Finish requires Twin Fang
+and Piercing Thrust. Points/unlocks are session-only and reset on reconnect.
+All skills wait for server acceptance, share an action lock and have independent
+cooldowns. Left-click with the sword is not an extra attack.
+
+Stationary targets share 100 health and respawn three simulation seconds after
+defeat. They do not fight back or grant rewards. Aim at their body centers;
+Piercing Thrust is deliberately narrow. The wall lane tests obstruction. This
+slice has fixed damage and no leveling, persistence, stamina or PvP.
+
+Build both matching checkouts before testing; old `0.1.0-dev` distributions and
+client JARs are incompatible. First-person animation, screen layout and two-client
+observation still require live verification for this feature.

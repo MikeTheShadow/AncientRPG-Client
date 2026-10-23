@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "dev.ancientrpg.client.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "SwordPoseMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

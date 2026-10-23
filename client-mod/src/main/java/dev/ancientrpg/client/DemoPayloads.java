@@ -57,7 +57,7 @@ public final class DemoPayloads {
     }
   }
 
-  private static <T> StreamCodec<FriendlyByteBuf, T> codec(
+  static <T> StreamCodec<FriendlyByteBuf, T> codec(
       int maximum, Function<T, byte[]> encode, Function<byte[], T> decode) {
     return StreamCodec.of(
         (buffer, value) -> {

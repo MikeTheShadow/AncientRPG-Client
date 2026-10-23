@@ -9,10 +9,14 @@ import java.util.List;
 public final class PublicContent {
   public static final String BLOCK = "ancientrpg:demo_block";
   public static final String ITEM = "ancientrpg:demo_item";
-  public static final int WIRE_VERSION = 1;
+  public static final String SWORD = "ancientrpg:training_sword";
+  public static final int WIRE_VERSION = 2;
   private static final List<String> ASSETS =
       List.of(
           "ancientrpg/content.json",
+          "assets/ancientrpg/models/item/training_sword.json",
+          "assets/ancientrpg/items/training_sword.json",
+          "assets/ancientrpg/textures/item/training_sword.png",
           "assets/ancientrpg/blockstates/demo_block.json",
           "assets/ancientrpg/models/block/demo_block_off.json",
           "assets/ancientrpg/models/block/demo_block_on.json",
@@ -23,7 +27,12 @@ public final class PublicContent {
   private PublicContent() {}
 
   public static Compatibility identity(
-      int minecraftProtocol, int blockId, int activeState, int inactiveState, int itemId) {
+      int minecraftProtocol,
+      int blockId,
+      int activeState,
+      int inactiveState,
+      int itemId,
+      int swordId) {
     var manifest = new LinkedHashMap<String, byte[]>();
     for (String path : ASSETS) manifest.put(path, resource(path));
     String ids =
@@ -38,6 +47,10 @@ public final class PublicContent {
             + ITEM
             + "="
             + itemId
+            + "\n"
+            + SWORD
+            + "="
+            + swordId
             + "\n";
     manifest.put("registry/runtime.txt", ids.getBytes(StandardCharsets.UTF_8));
     return new Compatibility(

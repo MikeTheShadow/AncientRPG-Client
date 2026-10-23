@@ -1,4 +1,4 @@
-# AncientRPG Protocol v1
+# AncientRPG Protocol v2
 
 All body integers are big-endian fixed-width signed values except the unsigned
 one-byte release length and response status/boolean. Channel identifiers supply the
@@ -83,3 +83,64 @@ Interactions are applied in the authoritative instance tick, including requests
 from players in adjacent chunks. A request targets only the demo block; its current
 reach, line of sight, mode, life state, and instance are validated at application
 time. The demo does not accept client-authored inventory or resulting block state.
+
+## Sword skills (wire v2, release 0.2.0-dev)
+
+The original switch payloads retain their layouts. Skill-use, unlock and switch
+requests share one monotonically increasing sequence per connection, one token
+bucket and one bounded intent queue. All values below are big-endian. Enum/flag
+bytes are unsigned. No trailing bytes are accepted. Maximum server body: 1 KiB.
+
+Skill IDs: 0 Quick Cut, 1 Sweeping Arc, 2 Piercing Thrust, 3 Twin Fang,
+4 Crescent Finish. Unknown IDs are invalid; these are the only five skills.
+
+| Channel | Body |
+| --- | --- |
+| `ancientrpg:skill_use` | sequence int64, skill uint8 (exactly 9 bytes) |
+| `ancientrpg:skill_unlock` | sequence int64, skill uint8 (exactly 9 bytes) |
+| `ancientrpg:skill_state` | sequence int64, reason uint8, server tick int64, learned mask uint8, points uint8, five cooldown-end int64 values in skill-ID order, action-present uint8, optional action (60 or 101 bytes) |
+| `ancientrpg:skill_event` | server tick int64, actor entity ID int32, phase uint8, action, hit count uint8, zero to three hits (55–91 bytes) |
+
+Action (41 bytes): globally increasing instance action ID int64, skill uint8,
+start tick int64, captured normalized aim x/y/z as three float64 values. This aim
+is server-observed presentation state, never input supplied by the skill request.
+Hit (12 bytes): target entity ID int32, actual damage int32, remaining health int32.
+Damage is positive and <=24; health is 0–100. Duplicate target IDs within a strike
+are invalid. Only HIT events can contain hits. All ticks/IDs are nonnegative;
+state sequence alone permits -1 for unsolicited snapshots. Aim must be finite and
+unit length within 1e-6. The learned mask is five bits and must contain the root;
+points are 0–4. All five cooldown deadlines are nonnegative. Absence flag is 0,
+presence is 1; no other value is valid. Action start cannot follow snapshot/event
+time. Decoders reject malformed bounds before allocating variable collections.
+
+Reason ordinals: 0 OK, 1 LOCKED, 2 PREREQUISITES, 3 POINTS, 4 ALREADY_LEARNED,
+5 BUSY, 6 COOLDOWN, 7 INELIGIBLE, 8 QUEUE_PRESSURE, 9 DUPLICATE.
+Phase ordinals: 0 START, 1 HIT, 2 END, 3 CANCEL, 4 SNAPSHOT, 5 REMOVE.
+
+Use/unlock responses carry the request sequence and current authoritative state.
+Periodic owner state is sent every five instance ticks. While an action is active,
+currently tracking admitted observers and its owner receive tick snapshots;
+leaving tracking sends REMOVE. Terminal events clear an action. Events reveal
+only the active action, never a future encounter schedule. Clients advance visual
+interpolation by at most one tick beyond the latest server sample; no displayed
+cooldown or animation can authorize an action.
+
+Queue-full requests consume their sequence. Rate-limited requests do not consume
+a sequence until accepted, matching existing session rules. Queue/rate/replay
+skill denials are coalesced in one per-session response slot, drained on the owning
+instance tick; overload cannot create another unbounded queue. Clients time out
+unconfirmed unlock UI after two seconds and may retry with a fresh sequence.
+Disconnect clears requests, rejection slots and actions. Sustained abuse and
+malformed/out-of-phase payloads retain existing disconnect behavior.
+
+Request golden fixture `(sequence=1, Crescent Finish)`:
+`000000000000000104` on either request channel. Channel determines use vs unlock.
+A fresh state is `ffffffffffffffff00`, eight zero tick bytes, `0104`, forty zero
+cooldown bytes, then `00` (absent action). Tests verify these literal fixtures,
+all state/event round trips and malformed input handling using both Java buffers
+and actual Minecraft/Fabric buffer adapters.
+
+The manifest now additionally includes the training-sword item/model/texture,
+updated public names/content metadata, and `ancientrpg:training_sword=1538` in
+runtime mappings. Existing block IDs and demo item ID remain unchanged. Clients
+using v1 or the old manifest/release are rejected before gameplay.

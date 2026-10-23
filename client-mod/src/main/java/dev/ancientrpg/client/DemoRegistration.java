@@ -20,6 +20,7 @@ public final class DemoRegistration implements ModInitializer {
   public static final BooleanProperty ACTIVE = BooleanProperty.create("active");
   public static Block block;
   public static Item item;
+  public static Item sword;
 
   @Override
   public void onInitialize() {
@@ -33,6 +34,12 @@ public final class DemoRegistration implements ModInitializer {
     item =
         Registry.register(
             BuiltInRegistries.ITEM, itemKey, new Item(new Item.Properties().setId(itemKey)));
+    var swordKey = ResourceKey.create(Registries.ITEM, Identifier.parse(PublicContent.SWORD));
+    sword =
+        Registry.register(
+            BuiltInRegistries.ITEM,
+            swordKey,
+            new Item(new Item.Properties().setId(swordKey).stacksTo(1)));
   }
 
   private static final class DemoBlock extends Block {

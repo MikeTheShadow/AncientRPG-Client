@@ -1,0 +1,63 @@
+# AncientRPG
+
+Public, source-available Fabric client and pure Java protocol contracts. First-party
+code and assets are All Rights Reserved; see LICENSE and THIRD_PARTY_NOTICES.md.
+Domain, GitHub remote, copyright holder, and publishing remain TODOs.
+
+## Initial Setup Demo
+
+The client registers `ancientrpg:demo_block` with an `active` state and
+`ancientrpg:demo_item`, responds to the server's compatibility challenge during
+configuration, and sends activation intent when you right-click the demo block.
+The server owns the block state, inventory, permissions, reach, and action results.
+
+Public assets and actual runtime registry IDs participate in the compatibility
+fingerprint. Extra content mods that change these IDs will be rejected. Rendering,
+Fabric's live registry lifecycle, and authenticated connection still require the
+real-client smoke test; serializer tests alone do not verify them.
+
+## Build and Install
+
+Use JDK 25 and the checked-in Gradle 9.6.0 wrapper. From this directory:
+
+```sh
+./gradlew build spotlessCheck :client-mod:prepareDemoMods
+```
+
+Windows: `gradlew.bat build spotlessCheck :client-mod:prepareDemoMods`.
+The generated `client-mod/build/demo-mods/` folder contains the AncientRPG mod JAR
+(with protocol/assets nested) and the pinned Fabric API JAR. Copy both JARs into a
+clean Minecraft **26.2** profile's `mods/` directory using Fabric Loader **0.19.3**.
+Launch through your normal authenticated Minecraft launcher, then join the local
+server at `127.0.0.1:25565`. The development release is `0.1.0-dev`.
+
+For client-only development, Loom's `:client-mod:runClient` is available; its default
+development identity is unsuitable for the online-authenticated server. Use your
+normal launcher for the integration smoke test; do not put access tokens in files
+or paste them into logs.
+
+## Checks
+
+`build` runs JUnit suites for public contracts and real Minecraft-buffer codecs.
+`spotlessCheck` verifies Java formatting; `spotlessApply` applies formatting.
+Dependencies need network access. No private server checkout is required to build
+the public client.
+
+The dependency-free protocol runner requires Python 3 and JDK 25+:
+
+```sh
+python tools/check_protocol.py --jdk /path/to/jdk-25
+```
+
+Omit `--jdk` when the correct `java`/`javac` are on PATH. This runner executes the same
+protocol assertions as JUnit but does not test the Fabric adapter or launch Minecraft.
+
+## Structure and CI
+
+- `protocol/`: wire contracts, canonical public-content hashing, and shared client assets.
+- `client-mod/`: Fabric registration, configuration/play payloads, and input/rendering adapters.
+- `docs/protocol.md`: wire format and compatibility rules.
+
+The prepared GitHub Actions workflow checks Linux and Windows. Hosted execution,
+remote setup, branch protection, and artifact publishing remain TODOs. Never add
+private server code, encounter logic, or credentials to this repository.

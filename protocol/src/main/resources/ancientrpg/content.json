@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "block": "ancientrpg:demo_block",
+  "property": "active",
+  "default": false,
+  "item": "ancientrpg:demo_item",
+  "blockTemplate": "minecraft:stone",
+  "itemTemplate": "minecraft:stick",
+  "minecraft": "26.2",
+  "minestomData": "26.2-rv3"
+}

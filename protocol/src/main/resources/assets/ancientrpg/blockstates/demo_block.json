@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "active=false": {
+      "model": "ancientrpg:block/demo_block_off"
+    },
+    "active=true": {
+      "model": "ancientrpg:block/demo_block_on"
+    }
+  }
+}

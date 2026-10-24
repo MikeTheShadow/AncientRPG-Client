@@ -132,3 +132,7 @@ reserve loot for the killer for one minute; environment deaths reserve it for th
 victim and their party snapshot. After that minute, anyone eligible can loot.
 See [death and loot smoke checks](docs/death-loot-smoke.md) for current evidence
 and remaining multiplayer/platform acceptance.
+
+Corpses now use a brief six-part cosmetic ragdoll, capped at six active bodies and
+two seconds before freezing face-up. Large frame stalls and later arrivals use
+fallback poses. See [ragdoll verification and measured cost](docs/ragdoll-smoke.md).

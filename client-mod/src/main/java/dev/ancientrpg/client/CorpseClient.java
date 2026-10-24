@@ -28,11 +28,17 @@ import net.minecraft.world.phys.EntityHitResult;
 /** Nearby cosmetic bodies and authorized loot cache only. Ownership stays on the server. */
 public final class CorpseClient {
   public static final CorpseClient INSTANCE = new CorpseClient();
+  public static final net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey<
+          CorpseRagdoll.Pose>
+      CORPSE_POSE = net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey.create();
+  private final CorpseRagdollPool ragdolls = new CorpseRagdollPool();
 
   private static final class Visual {
     CorpseWire.Body body;
     long received;
     RemotePlayer player;
+    CorpseRagdoll ragdoll;
+    boolean attempted;
 
     Visual(CorpseWire.Body body) {
       this.body = body;
@@ -93,6 +99,8 @@ public final class CorpseClient {
 
   public void install(LongSupplier sequence) {
     this.sequence = sequence;
+    net.fabricmc.fabric.api.client.rendering.v1.level.LevelExtractionEvents.END_EXTRACTION.register(
+        context -> ragdolls.finishFrame(System.nanoTime()));
     interact =
         KeyMappingHelper.registerKeyMapping(
             new KeyMapping(
@@ -191,6 +199,7 @@ public final class CorpseClient {
 
   private void reset() {
     bodies.clear();
+    ragdolls.clear();
     current = null;
     state = null;
     pending = -1;
@@ -281,6 +290,7 @@ public final class CorpseClient {
 
   private void event(CorpseWire.Event event) {
     if (event.body() == null) {
+      ragdolls.remove(event.id());
       bodies.entrySet().removeIf(e -> e.getValue().body.id().equals(event.id()));
       if (event.id().equals(current)) {
         state = null;
@@ -351,10 +361,32 @@ public final class CorpseClient {
     var state = dispatcher.getPlayerRenderer(fake).createRenderState(fake, partial);
     double p = visual.progress(), smooth = p * p * (3 - 2 * p);
     state.x = body.x();
-    state.y = body.y() + .08 + .18 * smooth;
+    double age = (body.ageMillis() + visual.elapsed()) / 1000.0;
+    if (!visual.attempted) {
+      visual.attempted = true;
+      visual.ragdoll = INSTANCE.ragdolls.start(body.id(), body.id().getLeastSignificantBits(), age);
+    }
+    if (visual.ragdoll != null && !visual.ragdoll.stopped()) {
+      INSTANCE.ragdolls.visible(
+          body.id(),
+          age,
+          CorpseTerrain.collider(
+              mc.level,
+              body.x(),
+              body.y(),
+              body.z(),
+              Math.toRadians(180 - body.yaw() - 180 * smooth)));
+    }
+    var pose =
+        visual.ragdoll == null || visual.ragdoll.fallback()
+            ? CorpseRagdoll.fallback(age)
+            : visual.ragdoll.pose();
+    ((net.fabricmc.fabric.api.client.rendering.v1.FabricRenderState) state)
+        .setData(CORPSE_POSE, pose);
+    state.y = body.y() + pose.height();
     state.z = body.z();
     state.bodyRot = body.yaw() + (float) (180 * smooth);
-    state.deathTime = (float) (1 + 12.5 * smooth * smooth);
+    state.deathTime = 0;
     state.walkAnimationSpeed = 0;
     state.walkAnimationPos = 0;
     state.ageInTicks = 0;
@@ -369,15 +401,21 @@ public final class CorpseClient {
   }
 
   public static void pose(HumanoidModel<?> model, AvatarRenderState state) {
-    var v = INSTANCE.bodies.get(state.id);
-    if (v == null) return;
-    float buckle = (float) Math.sin(v.progress() * Math.PI);
-    model.body.xRot = .45f * buckle;
-    model.head.xRot = .25f * buckle;
-    model.head.yRot = 0;
-    model.rightLeg.xRot = model.leftLeg.xRot = -.65f * buckle;
-    model.rightArm.xRot = model.leftArm.xRot = -.5f * buckle;
-    model.rightArm.zRot = .15f + .6f * buckle;
-    model.leftArm.zRot = -.15f - .6f * buckle;
+    var pose =
+        ((net.fabricmc.fabric.api.client.rendering.v1.FabricRenderState) state)
+            .getData(CORPSE_POSE);
+    if (pose == null) return;
+    var parts =
+        new net.minecraft.client.model.geom.ModelPart[] {
+          model.body, model.head, model.rightArm, model.leftArm, model.rightLeg, model.leftLeg
+        };
+    for (int i = 0; i < parts.length; i++) {
+      var transform = pose.parts().get(i);
+      var part = parts[i];
+      part.setPos(transform.x(), transform.y(), transform.z());
+      part.xRot = transform.pitch();
+      part.yRot = transform.yaw();
+      part.zRot = transform.roll();
+    }
   }
 }

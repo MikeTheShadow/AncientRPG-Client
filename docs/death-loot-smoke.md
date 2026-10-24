@@ -73,3 +73,9 @@ leaving the menu closed. Both Gradle builds/format checks, the registry probe,
 
 Rebinding was verified in the real Controls screen: changing F to H updated the
 prompt, F stopped opening loot, and H opened the authorized corpse menu.
+
+## Approved ragdoll follow-up
+
+The backward fall now supports bounded six-part jointed motion before settling
+face-up. See [ragdoll smoke checks and measurements](ragdoll-smoke.md). F interaction,
+claim rules, safe/risky ownership and corpse deadlines retain the approved behavior.

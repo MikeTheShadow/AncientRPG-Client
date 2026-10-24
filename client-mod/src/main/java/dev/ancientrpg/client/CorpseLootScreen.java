@@ -222,6 +222,10 @@ public final class CorpseLootScreen extends Screen {
   }
 
   public void tick() {
+    if (client.expired()) {
+      onClose();
+      return;
+    }
     takeAll.active = ready() && client.state().entries().stream().anyMatch(e -> !e.empty());
     if (source >= 0
         && (!ready()

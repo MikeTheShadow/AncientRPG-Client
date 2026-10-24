@@ -62,6 +62,7 @@ public final class CorpseClient {
   private CorpseWire.State state;
   private long pending = -1, pendingAt, received, lastResponse = -1;
   private boolean opening;
+  private long expiresAt = Long.MAX_VALUE;
   private Component feedback = Component.empty();
 
   private CorpseClient() {}
@@ -79,9 +80,13 @@ public final class CorpseClient {
   }
 
   int remaining() {
-    return state == null
+    return current == null || expiresAt == Long.MAX_VALUE
         ? 0
-        : (int) Math.max(0, state.remainingMillis() - (System.nanoTime() - received) / 1_000_000);
+        : (int) Math.clamp((expiresAt - System.nanoTime() + 999_999) / 1_000_000, 0, 300_000);
+  }
+
+  boolean expired() {
+    return current != null && expiresAt != Long.MAX_VALUE && System.nanoTime() >= expiresAt;
   }
 
   int lockRemaining() {
@@ -201,6 +206,7 @@ public final class CorpseClient {
     bodies.clear();
     ragdolls.clear();
     current = null;
+    expiresAt = Long.MAX_VALUE;
     state = null;
     pending = -1;
     lastResponse = -1;
@@ -210,6 +216,10 @@ public final class CorpseClient {
 
   private void open(UUID id) {
     current = id;
+    expiresAt = Long.MAX_VALUE;
+    for (var visual : bodies.values())
+      if (visual.body.id().equals(id))
+        expiresAt = visual.received + visual.body.remainingMillis() * 1_000_000L;
     state = null;
     feedback = tr("inventory.synchronizing");
     opening = true;
@@ -255,6 +265,7 @@ public final class CorpseClient {
           new CorpsePayloads.Request(
               new CorpseRequest(nextSequence(), CorpseRequest.CLOSE, current, 0, 0, 0, 0)));
     current = null;
+    expiresAt = Long.MAX_VALUE;
     state = null;
     opening = false;
   }
@@ -285,6 +296,15 @@ public final class CorpseClient {
             || incoming.result() == CorpseWire.Result.APPLIED)) return;
     state = incoming;
     received = System.nanoTime();
+    // Queue/storage feedback has no lifetime; retain the last known body deadline.
+    if (incoming.result() != CorpseWire.Result.PRESSURE
+        && incoming.result() != CorpseWire.Result.STORAGE)
+      expiresAt =
+          Math.min(
+              expiresAt,
+              incoming.result() == CorpseWire.Result.GONE
+                  ? received
+                  : received + incoming.remainingMillis() * 1_000_000L);
     feedback = tr("loot.result." + incoming.result().name().toLowerCase(Locale.ROOT));
   }
 
@@ -293,11 +313,15 @@ public final class CorpseClient {
       ragdolls.remove(event.id());
       bodies.entrySet().removeIf(e -> e.getValue().body.id().equals(event.id()));
       if (event.id().equals(current)) {
+        expiresAt = Math.min(expiresAt, System.nanoTime());
         state = null;
         feedback = tr("loot.result.gone");
       }
       return;
     }
+    if (event.id().equals(current))
+      expiresAt =
+          Math.min(expiresAt, System.nanoTime() + event.body().remainingMillis() * 1_000_000L);
     var old = bodies.get(event.body().entity());
     if (old == null || !old.body.id().equals(event.id()))
       bodies.put(event.body().entity(), new Visual(event.body()));

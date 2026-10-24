@@ -63,3 +63,9 @@ Still unverified: two authenticated real-client observers, external account skin
 Windows, armor variants unavailable in this slice and broad hardware/terrain
 coverage. Coarse collision is a presentation approximation, not full rigid-body
 physics or a guarantee against every mesh corner clipping complex geometry.
+
+## Current-scope acceptance
+
+The user tested the ragdoll, confirmed all their tests passed and requested marking
+it complete for now. This implementation scope is accepted. The unperformed
+platform/account coverage above remains deferred, not represented as passed.

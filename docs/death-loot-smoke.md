@@ -79,3 +79,17 @@ prompt, F stopped opening loot, and H opened the authorized corpse menu.
 The backward fall now supports bounded six-part jointed motion before settling
 face-up. See [ragdoll smoke checks and measurements](ragdoll-smoke.md). F interaction,
 claim rules, safe/risky ownership and corpse deadlines retain the approved behavior.
+
+## Expiry closes the menu
+
+The corpse menu now closes when the known body lifetime reaches zero or the
+server reports/removes that body. A one-minute claim-lock countdown reaching
+zero continues to open claims normally; it does not close a living body menu.
+Loading/queue/storage feedback cannot invent an expired body, and closing a
+view does not cancel or duplicate a submitted transfer.
+
+The packaged Linux client verified looting the last stack, the empty-body
+ten-second countdown, and automatic return to gameplay with the body removed.
+See [before expiry](images/corpse-expiry-before.png) and
+[after expiry](images/corpse-expiry-after.png). Both builds/format checks, registry
+probe and111 automated tests passed.

@@ -19,12 +19,14 @@ import net.minecraft.world.level.block.Block;
 
 public final class AncientRpgClient implements ClientModInitializer {
   private boolean responded;
+  private volatile boolean cameraCompatible;
   private long sequence;
 
   @Override
   public void onInitializeClient() {
     SkillClient.INSTANCE.install(() -> sequence++);
     InventoryClient.INSTANCE.install(() -> sequence++);
+    ThirdPersonCamera.install(() -> cameraCompatible);
     PayloadTypeRegistry.clientboundConfiguration()
         .register(DemoPayloads.Hello.TYPE, DemoPayloads.Hello.CODEC);
     PayloadTypeRegistry.serverboundConfiguration()
@@ -33,7 +35,11 @@ public final class AncientRpgClient implements ClientModInitializer {
         .register(DemoPayloads.Activate.TYPE, DemoPayloads.Activate.CODEC);
     PayloadTypeRegistry.clientboundPlay()
         .register(DemoPayloads.Result.TYPE, DemoPayloads.Result.CODEC);
-    ClientConfigurationConnectionEvents.INIT.register((handler, client) -> responded = false);
+    ClientConfigurationConnectionEvents.INIT.register(
+        (handler, client) -> {
+          responded = false;
+          cameraCompatible = false;
+        });
     ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> sequence = 0);
     ClientConfigurationNetworking.registerGlobalReceiver(
         DemoPayloads.Hello.TYPE,
@@ -64,6 +70,7 @@ public final class AncientRpgClient implements ClientModInitializer {
                               BuiltInRegistries.ITEM.getId(
                                   DemoRegistration.inventoryItems.get(i.id())))
                       .toArray());
+          cameraCompatible = actual.equals(payload.identity());
           // Always send our own identity, never echo an untrusted server declaration.
           context.responseSender().sendPacket(new DemoPayloads.Hello(actual));
         });

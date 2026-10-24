@@ -11,7 +11,8 @@
     "SkillScrollMixin",
     "SkillInventoryMixin",
     "SkillInputMixin",
-    "MainInventoryMixin"
+    "MainInventoryMixin",
+    "ThirdPersonCameraMixin"
   ],
   "injectors": {
     "defaultRequire": 1

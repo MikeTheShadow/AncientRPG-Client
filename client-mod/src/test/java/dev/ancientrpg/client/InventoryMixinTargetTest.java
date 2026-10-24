@@ -12,7 +12,21 @@ import org.objectweb.asm.tree.ClassNode;
 class InventoryMixinTargetTest {
   @Test
   void inventoryScreenHookTargetsAnExistingMethodWithTheScreenArgument() throws Exception {
-    var mixin = readClass("dev/ancientrpg/client/mixin/MainInventoryMixin");
+    assertTarget(
+        "MainInventoryMixin",
+        "ancientrpg$inventory",
+        "(Lnet/minecraft/client/gui/screens/Screen;)V");
+  }
+
+  @Test
+  void perspectiveHookTargetsAnExistingCameraSetter() throws Exception {
+    assertTarget(
+        "ThirdPersonCameraMixin", "ancientrpg$perspective", "(Lnet/minecraft/client/CameraType;)V");
+  }
+
+  private static void assertTarget(String mixinName, String handlerName, String descriptor)
+      throws Exception {
+    var mixin = readClass("dev/ancientrpg/client/mixin/" + mixinName);
     var targetAnnotation =
         mixin.invisibleAnnotations.stream()
             .filter(a -> a.desc.equals("Lorg/spongepowered/asm/mixin/Mixin;"))
@@ -22,10 +36,7 @@ class InventoryMixinTargetTest {
     assertEquals(1, targets.size());
     var target = readClass(((Type) targets.getFirst()).getInternalName());
     var handler =
-        mixin.methods.stream()
-            .filter(m -> m.name.equals("ancientrpg$inventory"))
-            .findFirst()
-            .orElseThrow();
+        mixin.methods.stream().filter(m -> m.name.equals(handlerName)).findFirst().orElseThrow();
     var injection =
         handler.visibleAnnotations.stream()
             .filter(a -> a.desc.equals("Lorg/spongepowered/asm/mixin/injection/ModifyVariable;"))
@@ -38,8 +49,8 @@ class InventoryMixinTargetTest {
               .anyMatch(
                   m ->
                       (m.name.equals(selector) || (m.name + m.desc).equals(selector))
-                          && m.desc.equals("(Lnet/minecraft/client/gui/screens/Screen;)V")),
-          () -> "Inventory mixin target does not exist: " + target.name + "." + selector);
+                          && m.desc.equals(descriptor)),
+          () -> "Mixin target does not exist: " + target.name + "." + selector);
     }
   }
 

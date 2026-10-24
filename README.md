@@ -68,6 +68,11 @@ private server code, encounter logic, or credentials to this repository.
 
 ## One-Handed Sword Training
 
+The current showcase trial forces the rear third-person camera on matching
+AncientRPG servers so your character and combat animations remain visible. The
+perspective key cannot switch views during the session. Normal camera look stays
+available; disconnecting restores the perspective you used before joining.
+
 The matching `0.4.0-dev` client/server includes exactly five skills: Quick Cut,
 Sweeping Arc, Piercing Thrust, Twin Fang, and Crescent Finish. Equip the Practice
 Sword through the main inventory (E), leave the offhand empty, and walk east to the marked area

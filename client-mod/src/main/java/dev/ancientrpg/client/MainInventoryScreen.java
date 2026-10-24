@@ -68,7 +68,7 @@ public final class MainInventoryScreen extends Screen {
     x = (width - pw) / 2;
     y = (height - ph) / 2;
     wide = pw >= 590 && ph >= 300;
-    top = y + 64;
+    top = y + (wide ? 43 : 64);
     bottom = y + ph - 34;
     int available = bottom - top;
     statsHeight = available >= 270 ? 54 : available >= 195 ? 30 : available >= 150 ? 18 : 0;
@@ -83,14 +83,18 @@ public final class MainInventoryScreen extends Screen {
     searchBox = null;
     control(x + pw - 29, y + 12, 18, 18, tr("common.close_icon"), this::onClose)
         .setTooltip(Tooltip.create(tr("common.close")));
-    equipmentTab =
-        control(x + 12, y + 38, 79, 18, tr("inventory.tab.equipment"), () -> switchPage(0));
-    bagTab = control(x + 95, y + 38, 75, 18, tr("inventory.tab.bag"), () -> switchPage(1));
-    detailsTab = control(x + 174, y + 38, 70, 18, tr("inventory.tab.details"), () -> switchPage(2));
-    equipmentTab.navigationPage = 0;
-    bagTab.navigationPage = 1;
-    detailsTab.navigationPage = 2;
-    bagTab.setTooltip(Tooltip.create(tr("inventory.bag_help")));
+    equipmentTab = bagTab = detailsTab = null;
+    if (!wide) {
+      equipmentTab =
+          control(x + 12, y + 38, 79, 18, tr("inventory.tab.equipment"), () -> switchPage(0));
+      bagTab = control(x + 95, y + 38, 75, 18, tr("inventory.tab.bag"), () -> switchPage(1));
+      detailsTab =
+          control(x + 174, y + 38, 70, 18, tr("inventory.tab.details"), () -> switchPage(2));
+      equipmentTab.navigationPage = 0;
+      bagTab.navigationPage = 1;
+      detailsTab.navigationPage = 2;
+      bagTab.setTooltip(Tooltip.create(tr("inventory.bag_help")));
+    }
     previousBag = nextBag = null;
     if (wide || page == 0) equipmentControls();
     if (wide || page == 1) bagControls();
@@ -126,7 +130,7 @@ public final class MainInventoryScreen extends Screen {
           setFocused(tile);
           break;
         }
-    } else setFocused(detailsTab);
+    } else if (detailsTab != null) setFocused(detailsTab);
   }
 
   private Control control(int xx, int yy, int w, int h, Component label, Runnable action) {
@@ -451,7 +455,7 @@ public final class MainInventoryScreen extends Screen {
     g.fill(x, y, x + pw, y + 2, BRASS);
     text(g, tr("inventory.heading"), x + 12, y + 11, BRASS, pw - 50);
     text(g, tr("inventory.subtitle"), x + 12, y + 24, MUTED, pw - 50);
-    g.fill(x + 12, y + 60, x + pw - 12, y + 61, LINE);
+    g.fill(x + 12, top - 4, x + pw - 12, top - 3, LINE);
     if (wide || page == 0) renderEquipment(g, mouseX, mouseY);
     if (wide || page == 1) {
       text(g, tr("inventory.bag"), bagX, top + 3, BRASS, bagW);

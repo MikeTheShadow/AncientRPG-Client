@@ -23,7 +23,8 @@ scaling is still unavailable; the screen does not invent stat values.
 
 1. Inspect the player model, typography, slot labels, tab focus, search and category
    filter. Increase GUI scale and resize the window; text/actions must remain reachable.
-   Main bag should visibly select its tab and focus search even in the wide layout.
+   Wide layouts show all three regions without navigation tabs. Compact layouts
+   show Equipment / Main bag / Details tabs; Main bag selects its view and focuses search.
    Search for an absent item: verify the empty-result explanation and clear-search
    control. Page arrows are disabled at their bounds, and the page count shows
    current/total pages. At a small enough size, verify actual next/previous pages.

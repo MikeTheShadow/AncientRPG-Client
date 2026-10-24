@@ -231,7 +231,11 @@ public final class CorpseClient {
   }
 
   public static boolean isBody(Entity entity) {
-    return INSTANCE.bodies.containsKey(entity.getId());
+    return isBody(entity.getId());
+  }
+
+  public static boolean isBody(int entityId) {
+    return INSTANCE.bodies.containsKey(entityId);
   }
 
   public static boolean hideOriginal(Entity entity) {
@@ -280,7 +284,7 @@ public final class CorpseClient {
     var state = dispatcher.getPlayerRenderer(fake).createRenderState(fake, partial);
     double p = visual.progress(), smooth = p * p * (3 - 2 * p);
     state.x = body.x();
-    state.y = body.y() + .08;
+    state.y = body.y() + .08 + .18 * smooth;
     state.z = body.z();
     state.bodyRot = body.yaw() + (float) (180 * smooth);
     state.deathTime = (float) (1 + 12.5 * smooth * smooth);

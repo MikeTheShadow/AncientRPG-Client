@@ -49,3 +49,11 @@ passing builds does not mark them passed.
 Visual evidence: [separate safe/risky stacks](images/death-risk-stacks.png),
 [resting body](images/death-body.png), [loot container](images/death-loot.png),
 [confirmed transfer](images/death-loot-transfer.png), [town merge](images/death-town.png).
+
+## Face-up pose adjustment
+
+At the user's request, the corpse now falls backward and rests on its back.
+The packaged Linux client smoke check verified the face-up resting body and no
+renderer/mixin exception. The existing 1.2-second timing and turn are retained;
+a small vertical adjustment keeps the head above the floor. The client build,
+34 tests, formatting and prepared mods passed.

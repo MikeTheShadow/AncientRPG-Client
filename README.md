@@ -126,7 +126,7 @@ the emerald-bordered spawn area is the test town. Outside town, use
 a red border and tooltip. Town arrival secures them and merges safe stacks.
 
 Death keeps safe items/equipment and leaves a body for five minutes (empty bodies
-last ten seconds). Right-click the body to drag whole stacks into your main bag,
+last ten seconds). Aim at the body and press **F** (Interact / loot body, rebindable in Controls) to drag whole stacks into your main bag,
 or use Take all. Tab and Enter/Space support keyboard pickup/place. Player kills
 reserve loot for the killer for one minute; environment deaths reserve it for the
 victim and their party snapshot. After that minute, anyone eligible can loot.

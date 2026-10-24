@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class SkillControlsMixin {
   @Inject(method = "handleKeybinds", at = @At("HEAD"), cancellable = true)
   private void ancientrpg$controls(CallbackInfo ci) {
+    dev.ancientrpg.client.CorpseClient.INSTANCE.suppressNativeSwap((Minecraft) (Object) this);
     if (!SkillClient.INSTANCE.committed()) return;
     var options = ((Minecraft) (Object) this).options;
     for (var key :

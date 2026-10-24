@@ -16,6 +16,8 @@
   "item.ancientrpg.practice_spear": "Practice Spear",
   "item.ancientrpg.practice_rapier": "Practice Rapier",
   "item.ancientrpg.field_bandage": "Field Bandage",
+  "key.ancientrpg.interact": "Interact / loot body",
+  "ancientrpg.loot.interact": "[%s] Loot body",
   "key.ancientrpg.inventory": "Character inventory",
   "item.ancientrpg.training_sword.description": "One-handed sword. The five training arts require an empty offhand.",
   "ancientrpg.family.sword": "Sword",

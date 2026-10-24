@@ -41,7 +41,7 @@ passing builds does not mark them passed.
 2. Spawn lies inside the emerald town. Run `/debug-iron-ore` for safe ore.
 3. Walk outside the border before running it again. E shows distinct safe/red stacks.
 4. Touch `(8,64,4)`, watch the animation and respawn. Safe items remain.
-5. Return near the body, look down and right-click. Drag ore onto an empty main-bag
+5. Return near the body, look down and press F (or your Interact binding). Drag ore onto an empty main-bag
    slot, or use Take all. Do not touch the block again while approaching.
 6. Walk back into town; red borders clear and matching stacks consolidate.
 7. Use two accounts to verify the one-minute lock and shared observer presentation.
@@ -57,3 +57,19 @@ The packaged Linux client smoke check verified the face-up resting body and no
 renderer/mixin exception. The existing 1.2-second timing and turn are retained;
 a small vertical adjustment keeps the head above the floor. The client build,
 34 tests, formatting and prepared mods passed.
+
+## Dedicated interact key
+
+Corpse loot now opens with **F** by default, under **Controls → Key Binds →
+Miscellaneous → Interact / loot body**. Aim at a nearby body; the localized HUD
+prompt shows the actual binding. Right-click and attack no longer open the menu.
+Input waits for a fresh physical press, so held keys do not repeat or leak through
+screens/action locks. The overlapping native swap-hands binding is suppressed
+only during compatible AncientRPG sessions; ordinary Minecraft bindings are retained.
+
+The packaged Linux client verified the F prompt, F opening, and both mouse buttons
+leaving the menu closed. Both Gradle builds/format checks, the registry probe,
+34 client plus72 private tests and351 dependency-free protocol assertions passed.
+
+Rebinding was verified in the real Controls screen: changing F to H updated the
+prompt, F stopped opening loot, and H opened the authorized corpse menu.

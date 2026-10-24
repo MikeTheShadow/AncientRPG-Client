@@ -3,22 +3,27 @@ package dev.ancientrpg.client;
 import static dev.ancientrpg.client.ClientText.tr;
 
 import com.mojang.authlib.GameProfile;
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.ancientrpg.protocol.*;
 import java.util.*;
 import java.util.function.LongSupplier;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.*;
-import net.fabricmc.fabric.api.event.player.UseEntityCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.player.RemotePlayer;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.state.*;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.InteractionResult;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.EntityHitResult;
 
 /** Nearby cosmetic bodies and authorized loot cache only. Ownership stays on the server. */
 public final class CorpseClient {
@@ -45,6 +50,8 @@ public final class CorpseClient {
 
   private final Map<Integer, Visual> bodies = new HashMap<>();
   private LongSupplier sequence;
+  private KeyMapping interact;
+  private final SkillInputEdge interactEdge = new SkillInputEdge();
   private UUID current;
   private CorpseWire.State state;
   private long pending = -1, pendingAt, received, lastResponse = -1;
@@ -86,6 +93,27 @@ public final class CorpseClient {
 
   public void install(LongSupplier sequence) {
     this.sequence = sequence;
+    interact =
+        KeyMappingHelper.registerKeyMapping(
+            new KeyMapping(
+                "key.ancientrpg.interact",
+                InputConstants.Type.KEYSYM,
+                org.lwjgl.glfw.GLFW.GLFW_KEY_F,
+                KeyMapping.Category.MISC));
+    HudElementRegistry.attachElementBefore(
+        VanillaHudElements.CHAT,
+        Identifier.parse("ancientrpg:corpse_interact"),
+        (g, delta) -> {
+          var mc = Minecraft.getInstance();
+          if (target(mc) == null) return;
+          var label = tr("loot.interact", interact.getTranslatedKeyMessage());
+          g.text(
+              mc.font,
+              label,
+              (g.guiWidth() - mc.font.width(label)) / 2,
+              g.guiHeight() / 2 + 18,
+              0xFFF0E9DB);
+        });
     PayloadTypeRegistry.serverboundPlay()
         .register(CorpsePayloads.Request.TYPE, CorpsePayloads.Request.CODEC);
     PayloadTypeRegistry.clientboundPlay()
@@ -100,6 +128,7 @@ public final class CorpseClient {
     ClientPlayConnectionEvents.DISCONNECT.register((h, c) -> reset());
     ClientTickEvents.END_CLIENT_TICK.register(
         c -> {
+          tickInput(c);
           if (pending() && System.nanoTime() - pendingAt > 5_000_000_000L) {
             pending = -1;
             feedback = tr("inventory.timeout");
@@ -109,17 +138,55 @@ public final class CorpseClient {
             refresh();
           }
         });
-    UseEntityCallback.EVENT.register(
-        (p, world, hand, entity, hit) -> {
-          if (world.isClientSide() && bodies.containsKey(entity.getId())) {
-            if (hand == net.minecraft.world.InteractionHand.MAIN_HAND) {
-              open(bodies.get(entity.getId()).body.id());
-              Minecraft.getInstance().gui.setScreen(new CorpseLootScreen());
-            }
-            return InteractionResult.SUCCESS;
-          }
-          return InteractionResult.PASS;
-        });
+  }
+
+  private boolean gameplay(Minecraft mc) {
+    return mc.player != null
+        && mc.player.isAlive()
+        && mc.level != null
+        && mc.gui.screen() == null
+        && mc.gui.overlay() == null
+        && ClientPlayNetworking.canSend(CorpsePayloads.Request.TYPE)
+        && !SkillClient.INSTANCE.committed()
+        && !pending()
+        && !InventoryClient.INSTANCE.pending();
+  }
+
+  private Visual target(Minecraft mc) {
+    if (!gameplay(mc) || !(mc.hitResult instanceof EntityHitResult hit)) return null;
+    var visual = bodies.get(hit.getEntity().getId());
+    if (visual == null
+        || visual.body.remainingMillis() <= visual.elapsed()
+        || hit.getEntity().getBoundingBox().distanceToSqr(mc.player.getEyePosition()) > 9)
+      return null;
+    return visual;
+  }
+
+  private void tickInput(Minecraft mc) {
+    var key = KeyMappingHelper.getBoundKeyOf(interact);
+    boolean down =
+        key.getValue() >= 0
+            && (key.getType() == InputConstants.Type.MOUSE
+                ? org.lwjgl.glfw.GLFW.glfwGetMouseButton(mc.getWindow().handle(), key.getValue())
+                    == org.lwjgl.glfw.GLFW.GLFW_PRESS
+                : InputConstants.isKeyDown(mc.getWindow(), key.getValue()));
+    while (interact.consumeClick()) {
+      /* Physical rising edge submits once. */
+    }
+    if (!interactEdge.update(gameplay(mc), down)) return;
+    var visual = target(mc);
+    if (visual != null) {
+      open(visual.body.id());
+      mc.gui.setScreen(new CorpseLootScreen());
+    }
+  }
+
+  /** Reserve a shared F binding for corpse interaction only during compatible sessions. */
+  public void suppressNativeSwap(Minecraft mc) {
+    if (interact != null
+        && ClientPlayNetworking.canSend(CorpsePayloads.Request.TYPE)
+        && mc.options.keySwapOffhand.same(interact))
+      while (mc.options.keySwapOffhand.consumeClick()) {}
   }
 
   private void reset() {

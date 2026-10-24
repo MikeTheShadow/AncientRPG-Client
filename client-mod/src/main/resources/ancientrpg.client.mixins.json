@@ -10,7 +10,8 @@
     "SkillControlsMixin",
     "SkillScrollMixin",
     "SkillInventoryMixin",
-    "SkillInputMixin"
+    "SkillInputMixin",
+    "MainInventoryMixin"
   ],
   "injectors": {
     "defaultRequire": 1

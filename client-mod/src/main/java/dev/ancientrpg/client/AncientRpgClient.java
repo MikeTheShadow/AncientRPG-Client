@@ -23,6 +23,7 @@ public final class AncientRpgClient implements ClientModInitializer {
   @Override
   public void onInitializeClient() {
     SkillClient.INSTANCE.install(() -> sequence++);
+    InventoryClient.INSTANCE.install(() -> sequence++);
     PayloadTypeRegistry.clientboundConfiguration()
         .register(DemoPayloads.Hello.TYPE, DemoPayloads.Hello.CODEC);
     PayloadTypeRegistry.serverboundConfiguration()
@@ -56,7 +57,14 @@ public final class AncientRpgClient implements ClientModInitializer {
                           .defaultBlockState()
                           .setValue(DemoRegistration.ACTIVE, false)),
                   BuiltInRegistries.ITEM.getId(DemoRegistration.item),
-                  BuiltInRegistries.ITEM.getId(DemoRegistration.sword));
+                  BuiltInRegistries.ITEM.getId(DemoRegistration.sword),
+                  dev.ancientrpg.protocol.InventoryCatalog.ITEMS.stream()
+                      .filter(i -> i.id() != 1 && i.id() != 10)
+                      .mapToInt(
+                          i ->
+                              BuiltInRegistries.ITEM.getId(
+                                  DemoRegistration.inventoryItems.get(i.id())))
+                      .toArray());
           // Always send our own identity, never echo an untrusted server declaration.
           context.responseSender().sendPacket(new DemoPayloads.Hello(actual));
         });

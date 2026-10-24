@@ -168,3 +168,23 @@ denial and never waits for a cooldown. END for the previous action precedes STAR
 for the successor. Completed IDs cannot resurrect client control locks; REMOVE
 only ends observation and allows the same active action to be observed again.
 Adjacent poses blend over two render ticks. Holding a key does not repeat casts.
+
+## Main inventory preview — wire v4 / 0.4.0-dev
+
+`ancientrpg:inventory_request` is exactly 19 big-endian bytes: nonnegative sequence
+i64, nonnegative expected revision i64, operation u8 (0 sync / 1 move), source u8,
+destination u8. Positions 0–35 are main bag; 36–47 are Head/Chest/Hands/Waist/Legs/
+Feet/Necklace/Ring/Earring/Mainhand/Offhand/First aid. Sync requires zero positions.
+Requests share the session sequence, token bucket and bounded owning-instance queue.
+
+`ancientrpg:inventory_state` is exactly 217 bytes: sequence i64 (-1 unsolicited),
+revision i64, result u8 (InventoryWire.Result order), current/max HP f32, then 48
+entries of catalogue ID u16 and quantity u16. Empty is (0,0); all IDs, quantities,
+slot eligibility, hand conflicts and finite health bounds are validated. Owner
+snapshots never broadcast private bags. The client waits for confirmation, rejects
+older revisions/responses, times out pending feedback and supports explicit refresh.
+Only the server writes ownership and saved state. See InventoryCatalog for public
+presentation IDs, hand requirements and example descriptions.
+
+This version fingerprints all example runtime IDs, authored model assets and the
+bundled dossier font. It rejects older v3/content distributions before admission.

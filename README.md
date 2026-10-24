@@ -29,7 +29,7 @@ The generated `client-mod/build/demo-mods/` folder contains the AncientRPG mod J
 (with protocol/assets nested) and the pinned Fabric API JAR. Copy both JARs into a
 clean Minecraft **26.2** profile's `mods/` directory using Fabric Loader **0.19.3**.
 Launch through your normal authenticated Minecraft launcher, then join the local
-server at `127.0.0.1:25565`. The development release is `0.3.0-dev`.
+server at `127.0.0.1:25565`. The development release is `0.4.0-dev`.
 
 For client-only development, Loom's `:client-mod:runClient` is available; its default
 development identity is unsuitable for the online-authenticated server. Use your
@@ -68,9 +68,9 @@ private server code, encounter logic, or credentials to this repository.
 
 ## One-Handed Sword Training
 
-The matching `0.3.0-dev` client/server includes exactly five skills: Quick Cut,
-Sweeping Arc, Piercing Thrust, Twin Fang, and Crescent Finish. Select the Practice
-Sword in hotbar slot 2, leave the offhand empty, and walk east to the marked area
+The matching `0.4.0-dev` client/server includes exactly five skills: Quick Cut,
+Sweeping Arc, Piercing Thrust, Twin Fang, and Crescent Finish. Equip the Practice
+Sword through the main inventory (E), leave the offhand empty, and walk east to the marked area
 around x=24–38, z=1–9. The original switch remains at spawn.
 
 Default bindings are **Z / X / C / V / B** in that skill order; **K** opens the
@@ -101,3 +101,14 @@ during the final three ticks to queue a follow-up; it starts only if eligible at
 the end. First-person hands and third-person body keyframes follow the strike
 phases, with a short blend between chained actions. These visuals still require
 real-client acceptance testing, including left-handed mode and latency.
+
+## Main Inventory Review
+
+Press **E** (or your Inventory binding) for the provisional AncientRPG character
+inventory. Equip the examples of sword, dagger, axe, greatsword, greataxe, hammer,
+spear and rapier; inspect items, pair one-handed weapons and test offhand locking.
+The backend saves the 36-slot main bag and equipped items across reconnect/restart.
+Global styling awaits in-game user approval. New weapon skills, healing and
+material bags are outside this first slice.
+
+See [inventory review steps](docs/inventory-smoke.md) and its unperformed graphical/platform checks.

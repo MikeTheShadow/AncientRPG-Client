@@ -21,6 +21,7 @@ public final class DemoRegistration implements ModInitializer {
   public static Block block;
   public static Item item;
   public static Item sword;
+  public static final java.util.Map<Integer, Item> inventoryItems = new java.util.LinkedHashMap<>();
 
   @Override
   public void onInitialize() {
@@ -40,6 +41,18 @@ public final class DemoRegistration implements ModInitializer {
             BuiltInRegistries.ITEM,
             swordKey,
             new Item(new Item.Properties().setId(swordKey).stacksTo(1)));
+    inventoryItems.put(1, sword);
+    inventoryItems.put(10, item);
+    for (var definition : dev.ancientrpg.protocol.InventoryCatalog.ITEMS) {
+      if (definition.id() == 1 || definition.id() == 10) continue;
+      var key = ResourceKey.create(Registries.ITEM, Identifier.parse(definition.key()));
+      inventoryItems.put(
+          definition.id(),
+          Registry.register(
+              BuiltInRegistries.ITEM,
+              key,
+              new Item(new Item.Properties().setId(key).stacksTo(definition.maxStack()))));
+    }
   }
 
   private static final class DemoBlock extends Block {

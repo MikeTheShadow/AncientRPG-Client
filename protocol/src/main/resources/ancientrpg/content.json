@@ -8,5 +8,15 @@
   "itemTemplate": "minecraft:stick",
   "minecraft": "26.2",
   "minestomData": "26.2-rv3",
-  "trainingSword": "ancientrpg:training_sword"
+  "trainingSword": "ancientrpg:training_sword",
+  "inventoryExamples": [
+    "ancientrpg:practice_dagger",
+    "ancientrpg:practice_axe",
+    "ancientrpg:practice_greatsword",
+    "ancientrpg:practice_greataxe",
+    "ancientrpg:practice_hammer",
+    "ancientrpg:practice_spear",
+    "ancientrpg:practice_rapier",
+    "ancientrpg:field_bandage"
+  ]
 }

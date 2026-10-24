@@ -7,5 +7,14 @@
   "key.ancientrpg.piercing_thrust": "Piercing Thrust",
   "key.ancientrpg.twin_fang": "Twin Fang",
   "key.ancientrpg.crescent_finish": "Crescent Finish",
-  "key.ancientrpg.tree": "Sword Skill Tree"
+  "key.ancientrpg.tree": "Sword Skill Tree",
+  "item.ancientrpg.practice_dagger": "Practice Dagger",
+  "item.ancientrpg.practice_axe": "Practice Axe",
+  "item.ancientrpg.practice_greatsword": "Practice Greatsword",
+  "item.ancientrpg.practice_greataxe": "Practice Greataxe",
+  "item.ancientrpg.practice_hammer": "Practice Hammer",
+  "item.ancientrpg.practice_spear": "Practice Spear",
+  "item.ancientrpg.practice_rapier": "Practice Rapier",
+  "item.ancientrpg.field_bandage": "Field Bandage",
+  "key.ancientrpg.inventory": "Character inventory"
 }

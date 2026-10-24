@@ -19,6 +19,7 @@ public abstract class SkillInventoryMixin {
       at = @At("HEAD"),
       cancellable = true)
   private void ancientrpg$inventory(CallbackInfo ci) {
-    if (SkillClient.INSTANCE.committed()) ci.cancel();
+    if (SkillClient.INSTANCE.committed()
+        || dev.ancientrpg.client.InventoryClient.INSTANCE.connected()) ci.cancel();
   }
 }

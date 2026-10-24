@@ -10,10 +10,13 @@ public final class PublicContent {
   public static final String BLOCK = "ancientrpg:demo_block";
   public static final String ITEM = "ancientrpg:demo_item";
   public static final String SWORD = "ancientrpg:training_sword";
-  public static final int WIRE_VERSION = 3;
+  public static final int WIRE_VERSION = 4;
   private static final List<String> ASSETS =
       List.of(
           "ancientrpg/content.json",
+          "assets/ancientrpg/font/dossier.json",
+          "assets/ancientrpg/font/dossier.ttf",
+          "ancientrpg/licenses/liberation-fonts.txt",
           "ancientrpg/sword-motion.json",
           "assets/ancientrpg/models/item/training_sword.json",
           "assets/ancientrpg/items/training_sword.json",
@@ -33,7 +36,10 @@ public final class PublicContent {
       int activeState,
       int inactiveState,
       int itemId,
-      int swordId) {
+      int swordId,
+      int... inventoryIds) {
+    if (inventoryIds.length != 8)
+      throw new IllegalArgumentException("Inventory registry identity required");
     var manifest = new LinkedHashMap<String, byte[]>();
     for (String path : ASSETS) manifest.put(path, resource(path));
     String ids =
@@ -53,6 +59,20 @@ public final class PublicContent {
             + "="
             + swordId
             + "\n";
+    int extra = 0;
+    for (var item : InventoryCatalog.ITEMS) {
+      if (item.id() == 1 || item.id() == 10) continue;
+      ids += item.key() + "=" + inventoryIds[extra++] + "\n";
+      String name = item.key().substring("ancientrpg:".length());
+      for (String path :
+          List.of(
+              "assets/ancientrpg/items/" + name + ".json",
+              "assets/ancientrpg/models/item/" + name + ".json"))
+        manifest.put(path, resource(path));
+    }
+    manifest.put(
+        "inventory/catalogue.txt",
+        InventoryCatalog.ITEMS.toString().getBytes(StandardCharsets.UTF_8));
     manifest.put("animation/runtime.txt", SwordAnimation.manifest());
     manifest.put("registry/runtime.txt", ids.getBytes(StandardCharsets.UTF_8));
     return new Compatibility(

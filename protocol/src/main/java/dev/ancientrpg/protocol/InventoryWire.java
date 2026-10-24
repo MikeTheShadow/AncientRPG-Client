@@ -8,7 +8,7 @@ public final class InventoryWire {
   public static final String REQUEST = "ancientrpg:inventory_request";
   public static final String STATE = "ancientrpg:inventory_state";
   public static final int REQUEST_BYTES = 19;
-  public static final int STATE_BYTES = 217;
+  public static final int STATE_BYTES = 265;
 
   public enum Result {
     SYNC("Inventory synchronized"),
@@ -32,10 +32,15 @@ public final class InventoryWire {
     }
   }
 
-  public record Entry(int item, int quantity) {
+  public record Entry(int item, int quantity, boolean risky) {
     public static final Entry EMPTY = new Entry(0, 0);
 
+    public Entry(int item, int quantity) {
+      this(item, quantity, false);
+    }
+
     public Entry {
+      if (risky && item != 11) throw new IllegalArgumentException("Ineligible risky stack");
       if (item < 0
           || item > InventoryCatalog.ITEMS.size()
           || (item == 0
@@ -69,7 +74,8 @@ public final class InventoryWire {
       if (entries.size() != InventoryCatalog.SLOT_COUNT)
         throw new IllegalArgumentException("Invalid slot count");
       for (int i = 0; i < entries.size(); i++)
-        if (!InventoryCatalog.fits(entries.get(i).item(), i))
+        if (!InventoryCatalog.fits(entries.get(i).item(), i)
+            || (i >= InventoryCatalog.BAG_SIZE && entries.get(i).risky()))
           throw new IllegalArgumentException("Invalid equipped item");
       var main = entries.get(InventoryCatalog.Slot.MAINHAND.index());
       if (!main.empty()
@@ -110,9 +116,21 @@ public final class InventoryWire {
             .put((byte) s.result().ordinal())
             .putFloat(s.health())
             .putFloat(s.maxHealth());
-    for (var entry : s.entries())
-      b.putShort((short) entry.item()).putShort((short) entry.quantity());
+    for (var entry : s.entries()) putEntry(b, entry);
     return b.array();
+  }
+
+  public static void putEntry(ByteBuffer b, Entry entry) {
+    b.putShort((short) entry.item())
+        .putShort((short) entry.quantity())
+        .put((byte) (entry.risky() ? 1 : 0));
+  }
+
+  public static Entry getEntry(ByteBuffer b) {
+    int item = Short.toUnsignedInt(b.getShort()), quantity = Short.toUnsignedInt(b.getShort());
+    int flags = Byte.toUnsignedInt(b.get());
+    if (flags > 1) throw new IllegalArgumentException("Inventory flags");
+    return new Entry(item, quantity, flags == 1);
   }
 
   public static State decodeState(byte[] bytes) {
@@ -123,8 +141,7 @@ public final class InventoryWire {
     if (result >= Result.values().length) throw new IllegalArgumentException("Inventory result");
     float health = b.getFloat(), max = b.getFloat();
     var entries = new ArrayList<Entry>();
-    for (int i = 0; i < InventoryCatalog.SLOT_COUNT; i++)
-      entries.add(new Entry(Short.toUnsignedInt(b.getShort()), Short.toUnsignedInt(b.getShort())));
+    for (int i = 0; i < InventoryCatalog.SLOT_COUNT; i++) entries.add(getEntry(b));
     return new State(sequence, revision, Result.values()[result], health, max, entries);
   }
 }

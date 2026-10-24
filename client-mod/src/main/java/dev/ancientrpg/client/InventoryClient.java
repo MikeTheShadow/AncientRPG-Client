@@ -86,7 +86,7 @@ public final class InventoryClient {
   }
 
   private void send(boolean sync, int from, int to) {
-    if (!connected() || pending()) return;
+    if (!connected() || pending() || CorpseClient.INSTANCE.pending()) return;
     pending = sequence.getAsLong();
     pendingAt = System.nanoTime();
     ClientPlayNetworking.send(

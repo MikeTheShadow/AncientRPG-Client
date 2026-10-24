@@ -15,7 +15,9 @@ public abstract class SkillBodyMixin {
       method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/HumanoidRenderState;)V",
       at = @At("TAIL"))
   private void ancientrpg$pose(HumanoidRenderState state, CallbackInfo ci) {
-    if (state instanceof AvatarRenderState avatar)
+    if (state instanceof AvatarRenderState avatar) {
       SkillPresentation.body((HumanoidModel<?>) (Object) this, avatar);
+      dev.ancientrpg.client.CorpseClient.pose((HumanoidModel<?>) (Object) this, avatar);
+    }
   }
 }

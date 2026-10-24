@@ -90,15 +90,16 @@ public final class ProtocolChecks {
         ContentManifest.fingerprint(Map.of()));
     var actual =
         PublicContent.identity(
-            776, 1196, 32366, 32367, 1537, 1538, 1539, 1540, 1541, 1542, 1543, 1544, 1545, 1546);
+            776, 1196, 32366, 32367, 1537, 1538, 1197, 32368, 1539, 1540, 1541, 1542, 1543, 1544,
+            1545, 1546, 1547);
     eq(actual, WireCodec.decodeCompatibility(WireCodec.encodeCompatibility(actual)));
     check(
         !actual
             .manifest()
             .equals(
                 PublicContent.identity(
-                        776, 1196, 32366, 32367, 1537, 1539, 1539, 1540, 1541, 1542, 1543, 1544,
-                        1545, 1546)
+                        776, 1196, 32366, 32367, 1537, 1539, 1197, 32368, 1539, 1540, 1541, 1542,
+                        1543, 1544, 1545, 1546, 1547)
                     .manifest()),
         "Training sword mapping participates in compatibility");
     check(
@@ -106,8 +107,8 @@ public final class ProtocolChecks {
             .manifest()
             .equals(
                 PublicContent.identity(
-                        776, 1196, 32367, 32366, 1537, 1538, 1539, 1540, 1541, 1542, 1543, 1544,
-                        1545, 1546)
+                        776, 1196, 32367, 32366, 1537, 1538, 1197, 32368, 1539, 1540, 1541, 1542,
+                        1543, 1544, 1545, 1546, 1547)
                     .manifest()),
         "Block state mapping participates in compatibility");
     check(
@@ -115,8 +116,8 @@ public final class ProtocolChecks {
             .manifest()
             .equals(
                 PublicContent.identity(
-                        776, 1196, 32366, 32367, 1538, 1538, 1539, 1540, 1541, 1542, 1543, 1544,
-                        1545, 1546)
+                        776, 1196, 32366, 32367, 1538, 1538, 1197, 32368, 1539, 1540, 1541, 1542,
+                        1543, 1544, 1545, 1546, 1547)
                     .manifest()),
         "Item ID participates in compatibility");
   }

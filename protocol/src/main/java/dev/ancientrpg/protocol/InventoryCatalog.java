@@ -137,7 +137,16 @@ public final class InventoryCatalog {
               false,
               false,
               64,
-              "Activates the Ancient Switch. Its hotbar shortcut remains available."));
+              "Activates the Ancient Switch. Its hotbar shortcut remains available."),
+          new Item(
+              11,
+              "ancientrpg:debug_iron_ore",
+              "Iron Ore",
+              "Material",
+              false,
+              false,
+              64,
+              "A test material. Risky ore drops on death; reaching town secures it."));
 
   private InventoryCatalog() {}
 

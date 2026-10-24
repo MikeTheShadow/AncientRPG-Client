@@ -29,12 +29,12 @@ class InventoryWireTest {
     entries.set(0, new InventoryWire.Entry(8, 1));
     var state = new InventoryWire.State(3, 4, InventoryWire.Result.APPLIED, 15, 20, entries);
     byte[] bytes = InventoryWire.encodeState(state);
-    assertEquals(217, bytes.length);
+    assertEquals(265, bytes.length);
     assertEquals(state, InventoryWire.decodeState(bytes));
     assertThrows(
-        IllegalArgumentException.class, () -> InventoryWire.decodeState(Arrays.copyOf(bytes, 218)));
+        IllegalArgumentException.class, () -> InventoryWire.decodeState(Arrays.copyOf(bytes, 266)));
     assertThrows(IllegalArgumentException.class, () -> new InventoryWire.Entry(8, 2));
-    assertThrows(IllegalArgumentException.class, () -> new InventoryWire.Entry(11, 1));
+    assertThrows(IllegalArgumentException.class, () -> new InventoryWire.Entry(12, 1));
     assertThrows(IllegalArgumentException.class, () -> new InventoryWire.Entry(0, 1));
     assertThrows(
         IllegalArgumentException.class,
@@ -48,14 +48,15 @@ class InventoryWireTest {
 
   @Test
   void allNewRuntimeIdsParticipateInCompatibility() {
-    int[] ids = {1539, 1540, 1541, 1542, 1543, 1544, 1545, 1546};
-    var original = PublicContent.identity(776, 1196, 32366, 32367, 1537, 1538, ids);
+    int[] ids = {1539, 1540, 1541, 1542, 1543, 1544, 1545, 1546, 1547};
+    var original = PublicContent.identity(776, 1196, 32366, 32367, 1537, 1538, 1197, 32368, ids);
     for (int i = 0; i < ids.length; i++) {
       int[] changed = ids.clone();
       changed[i]++;
       assertNotEquals(
           original.manifest(),
-          PublicContent.identity(776, 1196, 32366, 32367, 1537, 1538, changed).manifest());
+          PublicContent.identity(776, 1196, 32366, 32367, 1537, 1538, 1197, 32368, changed)
+              .manifest());
     }
   }
 }

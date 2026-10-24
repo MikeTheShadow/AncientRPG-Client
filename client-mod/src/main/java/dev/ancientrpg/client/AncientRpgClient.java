@@ -26,6 +26,7 @@ public final class AncientRpgClient implements ClientModInitializer {
   public void onInitializeClient() {
     SkillClient.INSTANCE.install(() -> sequence++);
     InventoryClient.INSTANCE.install(() -> sequence++);
+    CorpseClient.INSTANCE.install(() -> sequence++);
     ThirdPersonCamera.install(() -> cameraCompatible);
     PayloadTypeRegistry.clientboundConfiguration()
         .register(DemoPayloads.Hello.TYPE, DemoPayloads.Hello.CODEC);
@@ -63,6 +64,8 @@ public final class AncientRpgClient implements ClientModInitializer {
                           .setValue(DemoRegistration.ACTIVE, false)),
                   BuiltInRegistries.ITEM.getId(DemoRegistration.item),
                   BuiltInRegistries.ITEM.getId(DemoRegistration.sword),
+                  BuiltInRegistries.BLOCK.getId(DemoRegistration.deathBlock),
+                  Block.getId(DemoRegistration.deathBlock.defaultBlockState()),
                   dev.ancientrpg.protocol.InventoryCatalog.ITEMS.stream()
                       .filter(i -> i.id() != 1 && i.id() != 10)
                       .mapToInt(

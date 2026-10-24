@@ -23,6 +23,10 @@ class ClientLocalizationTest {
   private static final List<String> PRESENTATION_CLASSES =
       List.of(
           "ClientText",
+          "CorpseClient",
+          "CorpseLootScreen",
+          "CorpseLootScreen$Tile",
+          "InventoryUi",
           "InventoryClient",
           "MainInventoryScreen",
           "MainInventoryScreen$Control",
@@ -34,6 +38,7 @@ class ClientLocalizationTest {
   private static final Set<String> PREFIXES =
       Set.of(
           "inventory.",
+          "loot.",
           "common.",
           "skills.",
           "skill.",
@@ -99,6 +104,8 @@ class ClientLocalizationTest {
       require(language, key + ".short");
       require(language, "key.ancientrpg." + skill.name().toLowerCase(Locale.ROOT));
     }
+    for (var result : dev.ancientrpg.protocol.CorpseWire.Result.values())
+      require(language, "ancientrpg.loot.result." + result.name().toLowerCase(Locale.ROOT));
     for (var reason : SkillWire.Reason.values())
       require(language, "ancientrpg.skills.reason." + reason.name().toLowerCase(Locale.ROOT));
     for (String category : List.of("all", "weapons", "supplies"))

@@ -553,6 +553,7 @@ public final class MainInventoryScreen extends Screen {
     g.fill(xx - 2, yy - 2, xx + 20, yy + 20, INK);
     g.outline(xx - 2, yy - 2, 22, 22, BRASS);
     drawItem(g, gesture.carried(), xx, yy);
+    InventoryUi.risk(g, gesture.carried(), xx - 3, yy - 3, 24, 24);
     if (gesture.carried().quantity() > 1)
       text(g, tr("format.number", gesture.carried().quantity()), xx + 4, yy + 10, IVORY, 18);
     g.fill(x + 12, bottom + 8, x + pw - 82, y + ph - 7, INK);
@@ -817,6 +818,7 @@ public final class MainInventoryScreen extends Screen {
               8);
         }
       }
+      InventoryUi.risk(g, value, getX(), getY(), getWidth(), getHeight());
       boolean gear = index >= InventoryCatalog.BAG_SIZE;
       if (gear) {
         Component label = ClientText.slot(Slot.values()[index - InventoryCatalog.BAG_SIZE]);
@@ -852,6 +854,7 @@ public final class MainInventoryScreen extends Screen {
           && !gesture.carrying()) {
         var lines = new ArrayList<Component>();
         lines.add(getMessage());
+        if (value.risky()) lines.add(styled(tr("inventory.risky")));
         if (client.pending() && (index == pendingSource || index == pendingTarget))
           lines.add(styled(tr("inventory.pending_slot")));
         if (!value.empty())

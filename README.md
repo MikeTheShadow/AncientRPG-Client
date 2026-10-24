@@ -29,7 +29,7 @@ The generated `client-mod/build/demo-mods/` folder contains the AncientRPG mod J
 (with protocol/assets nested) and the pinned Fabric API JAR. Copy both JARs into a
 clean Minecraft **26.2** profile's `mods/` directory using Fabric Loader **0.19.3**.
 Launch through your normal authenticated Minecraft launcher, then join the local
-server at `127.0.0.1:25565`. The development release is `0.4.0-dev`.
+server at `127.0.0.1:25565`. The development release is `0.5.0-dev`.
 
 For client-only development, Loom's `:client-mod:runClient` is available; its default
 development identity is unsuitable for the online-authenticated server. Use your
@@ -73,7 +73,7 @@ AncientRPG servers so your character and combat animations remain visible. The
 perspective key cannot switch views during the session. Normal camera look stays
 available; disconnecting restores the perspective you used before joining.
 
-The matching `0.4.0-dev` client/server includes exactly five skills: Quick Cut,
+The matching `0.5.0-dev` client/server includes exactly five skills: Quick Cut,
 Sweeping Arc, Piercing Thrust, Twin Fang, and Crescent Finish. Equip the Practice
 Sword through the main inventory (E), leave the offhand empty, and walk east to the marked area
 around x=24–38, z=1–9. The original switch remains at spawn.
@@ -117,3 +117,18 @@ Global styling awaits in-game user approval. New weapon skills, healing and
 material bags are outside this first slice.
 
 See [inventory review steps](docs/inventory-smoke.md) and its unperformed graphical/platform checks.
+
+## Death and Loot Test Slice
+
+The local test world has a Block of Death at **(8,64,4)**. Touching it kills you;
+the emerald-bordered spawn area is the test town. Outside town, use
+`/debug-iron-ore` to add eight risky Iron Ore to your main bag. Risky stacks have
+a red border and tooltip. Town arrival secures them and merges safe stacks.
+
+Death keeps safe items/equipment and leaves a body for five minutes (empty bodies
+last ten seconds). Right-click the body to drag whole stacks into your main bag,
+or use Take all. Tab and Enter/Space support keyboard pickup/place. Player kills
+reserve loot for the killer for one minute; environment deaths reserve it for the
+victim and their party snapshot. After that minute, anyone eligible can loot.
+See [death and loot smoke checks](docs/death-loot-smoke.md) for current evidence
+and remaining multiplayer/platform acceptance.

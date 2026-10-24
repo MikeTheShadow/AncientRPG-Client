@@ -12,7 +12,8 @@
     "SkillInventoryMixin",
     "SkillInputMixin",
     "MainInventoryMixin",
-    "ThirdPersonCameraMixin"
+    "ThirdPersonCameraMixin",
+    "CorpseRenderMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -10,7 +10,8 @@ public final class PublicContent {
   public static final String BLOCK = "ancientrpg:demo_block";
   public static final String ITEM = "ancientrpg:demo_item";
   public static final String SWORD = "ancientrpg:training_sword";
-  public static final int WIRE_VERSION = 4;
+  public static final String DEATH_BLOCK = "ancientrpg:block_of_death";
+  public static final int WIRE_VERSION = 5;
   private static final List<String> ASSETS =
       List.of(
           "ancientrpg/content.json",
@@ -26,7 +27,9 @@ public final class PublicContent {
           "assets/ancientrpg/models/block/demo_block_on.json",
           "assets/ancientrpg/models/item/demo_item.json",
           "assets/ancientrpg/items/demo_item.json",
-          "assets/ancientrpg/lang/en_us.json");
+          "assets/ancientrpg/lang/en_us.json",
+          "assets/ancientrpg/blockstates/block_of_death.json",
+          "assets/ancientrpg/models/block/block_of_death.json");
 
   private PublicContent() {}
 
@@ -37,13 +40,21 @@ public final class PublicContent {
       int inactiveState,
       int itemId,
       int swordId,
+      int deathBlockId,
+      int deathStateId,
       int... inventoryIds) {
-    if (inventoryIds.length != 8)
+    if (inventoryIds.length != 9)
       throw new IllegalArgumentException("Inventory registry identity required");
     var manifest = new LinkedHashMap<String, byte[]>();
     for (String path : ASSETS) manifest.put(path, resource(path));
     String ids =
-        BLOCK
+        DEATH_BLOCK
+            + "="
+            + deathBlockId
+            + ":"
+            + deathStateId
+            + "\n"
+            + BLOCK
             + "="
             + blockId
             + "\nactive=true="

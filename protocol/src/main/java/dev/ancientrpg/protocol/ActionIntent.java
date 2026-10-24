@@ -1,5 +1,6 @@
 package dev.ancientrpg.protocol;
 
-public sealed interface ActionIntent permits Interaction, SkillRequest, InventoryRequest {
+public sealed interface ActionIntent
+    permits Interaction, SkillRequest, InventoryRequest, CorpseRequest {
   long sequence();
 }

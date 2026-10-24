@@ -188,3 +188,38 @@ presentation IDs, hand requirements and example descriptions.
 
 This version fingerprints all example runtime IDs, authored model assets and the
 bundled dossier font. It rejects older v3/content distributions before admission.
+
+## Death and shared-bag risk — wire v5 / 0.5.0-dev
+
+V5 supersedes the inventory snapshot above: 25-byte header plus 48 entries of
+`catalogue u16 / quantity u16 / flags u8` = **265 bytes**. Bit 0 means risky;
+other bits, risky empty entries, risky equipment and risk on ineligible item types
+are rejected. Catalogue 11 is debug Iron Ore (max 64). Safe and risky stacks are
+distinct. Only committed server snapshots change risk or ownership.
+
+`ancientrpg:corpse_request` is **43 bytes**, big-endian: sequence i64, operation
+u8 (OPEN=0, TAKE=1, CLOSE=2, TAKE_ALL=3), corpse UUID (two i64), expected corpse
+revision i64, expected inventory revision i64, source u8, target bag position u8.
+Positions are 0–35. OPEN/CLOSE require zero revisions/positions; TAKE_ALL requires
+zero positions. Requests share admission, replay prevention, rate and queue bounds
+with ordinary inventory and skills. TAKE transfers a whole stack; TAKE_ALL is atomic.
+
+`ancientrpg:corpse_state` is **230 bytes**: sequence i64 (-1 unsolicited), UUID,
+corpse revision i64, inventory revision i64, result u8, remaining claim lock i32,
+remaining lifetime i32, authorized u8 (0/1), then 36 five-byte entries. Results in
+order: OPEN, APPLIED, LOCKED, STALE, FULL, GONE, INELIGIBLE, BUSY, STORAGE, PRESSURE.
+Denied snapshots contain only empty entries. Nonempty corpse entries must be risky.
+Lock is 0–60,000 ms; lifetime is 0–300,000 ms. Claimant UUIDs are never sent.
+
+`ancientrpg:corpse_event` is at most **512 bytes**. Removal is exactly 17 bytes:
+operation 1 plus UUID. Upsert is operation 0, corpse UUID, actor UUID, UTF-8 name
+length u16 and bytes (1–128 bytes, at most 32 characters, no controls/format codes),
+interaction entity i32, x/y/z f64, yaw f32, elapsed age i32, remaining lifetime i32,
+and six five-byte safe visible equipment entries in mainhand/offhand/head/chest/
+legs/feet order. Coordinates are finite and within ±30,000,000; age and remaining
+are 0–300,000. Invalid UTF-8, truncated/trailing bytes and unknown fields fail closed.
+These nearby events carry presentation only. Late viewers use elapsed age rather
+than restarting the animation. Server removal/reach/expiry controls availability.
+
+The content identity now includes the genuine Block of Death block/state IDs,
+Iron Ore runtime ID and their assets. Matching v5 releases are mandatory.

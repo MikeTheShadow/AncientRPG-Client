@@ -19,6 +19,7 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 public final class DemoRegistration implements ModInitializer {
   public static final BooleanProperty ACTIVE = BooleanProperty.create("active");
   public static Block block;
+  public static Block deathBlock;
   public static Item item;
   public static Item sword;
   public static final java.util.Map<Integer, Item> inventoryItems = new java.util.LinkedHashMap<>();
@@ -31,6 +32,13 @@ public final class DemoRegistration implements ModInitializer {
             BuiltInRegistries.BLOCK,
             blockKey,
             new DemoBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE).setId(blockKey)));
+    var deathKey =
+        ResourceKey.create(Registries.BLOCK, Identifier.parse(PublicContent.DEATH_BLOCK));
+    deathBlock =
+        Registry.register(
+            BuiltInRegistries.BLOCK,
+            deathKey,
+            new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE).setId(deathKey)));
     var itemKey = ResourceKey.create(Registries.ITEM, Identifier.parse(PublicContent.ITEM));
     item =
         Registry.register(

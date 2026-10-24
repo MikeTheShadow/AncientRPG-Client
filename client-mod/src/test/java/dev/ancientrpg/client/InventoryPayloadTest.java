@@ -18,7 +18,7 @@ class InventoryPayloadTest {
       buffer.getBytes(0, actual);
       assertArrayEquals(InventoryWire.encodeRequest(request), actual);
       assertEquals(request, InventoryPayloads.Request.CODEC.decode(buffer).value());
-      buffer.clear().writeZero(218);
+      buffer.clear().writeZero(InventoryWire.STATE_BYTES + 1);
       assertThrows(
           IllegalArgumentException.class, () -> InventoryPayloads.State.CODEC.decode(buffer));
       assertEquals(0, buffer.readerIndex());

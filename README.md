@@ -122,7 +122,7 @@ See [inventory review steps](docs/inventory-smoke.md) and its unperformed graphi
 
 The local test world has a Block of Death at **(8,64,4)**. Touching it kills you;
 the emerald-bordered spawn area is the test town. Outside town, use
-`/debug-iron-ore` to add eight risky Iron Ore to your main bag. Risky stacks have
+`/debug iron-ore` to add eight risky Iron Ore to your main bag. Risky stacks have
 a red border and tooltip. Town arrival secures them and merges safe stacks.
 
 Death keeps safe items/equipment and leaves a body for five minutes (empty bodies

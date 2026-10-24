@@ -30,3 +30,9 @@ Windows). Use formatter-defined Java style, `UpperCamelCase` types, `lowerCamelC
 members, and `*Test` JUnit classes. Document real-client checks separately from unit
 tests. Use Conventional Commits and report checks not run. Merge only after the
 applicable reviewed checklist passes. No private checkout is required to build.
+
+## Debug command convention
+
+Document AncientRPG developer/manual-test commands as `/debug <subcommand>`, never
+standalone `/debug-*` names. The backend owns registration, argument validation and
+execution. Keep visible command help localized in en_us.json.

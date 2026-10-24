@@ -196,6 +196,7 @@
   "ancientrpg.family.material": "Material",
   "ancientrpg.inventory.risky": "Drops on death until secured in town",
   "ancientrpg.death.defeated": "Defeated!",
+  "ancientrpg.debug.usage": "Debug subcommands: %s",
   "ancientrpg.debug.ore_granted": "Added 8 Iron Ore. Ore obtained outside town is risky.",
   "ancientrpg.debug.risk_cleared": "Risky test materials cleared.",
   "ancientrpg.debug.player_missing": "That test player is not online.",

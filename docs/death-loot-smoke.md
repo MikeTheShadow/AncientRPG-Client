@@ -38,7 +38,7 @@ passing builds does not mark them passed.
 
 1. Build/install both matching distributions. Launch with `python3 test.py --skip-build`
    from the coordination workspace when available, or your normal launcher/local server.
-2. Spawn lies inside the emerald town. Run `/debug-iron-ore` for safe ore.
+2. Spawn lies inside the emerald town. Run `/debug iron-ore` for safe ore.
 3. Walk outside the border before running it again. E shows distinct safe/red stacks.
 4. Touch `(8,64,4)`, watch the animation and respawn. Safe items remain.
 5. Return near the body, look down and press F (or your Interact binding). Drag ore onto an empty main-bag

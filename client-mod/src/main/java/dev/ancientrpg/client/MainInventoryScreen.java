@@ -32,12 +32,15 @@ public final class MainInventoryScreen extends Screen {
       new FontDescription.Resource(Identifier.parse("ancientrpg:dossier"));
   private final InventoryClient client = InventoryClient.INSTANCE;
   private final List<Tile> tiles = new ArrayList<>();
+  private final InventoryGesture gesture = new InventoryGesture();
   private int x, y, pw, ph, top, bottom, equipX, equipW, bagX, bagW, detailX, detailW;
   private int selected = -1, page, bagPage, columns, rows;
   private boolean wide;
   private String search = "", category = "All";
   private EditBox searchBox;
-  private Control main, off, unequip, firstAid, move;
+  private Control equipmentTab, bagTab, previousBag, nextBag;
+  private Control hoveredNavigation;
+  private long navigationSince;
   private long renderedRevision = -1;
   private boolean requestedOpeningState;
   private String localFeedback = "";
@@ -69,8 +72,8 @@ public final class MainInventoryScreen extends Screen {
     tiles.clear();
     searchBox = null;
     control(x + pw - 29, y + 12, 18, 18, "X", this::onClose);
-    control(x + 12, y + 38, 79, 18, "Equipment", () -> switchPage(0));
-    control(x + 95, y + 38, 75, 18, "Main bag", () -> switchPage(1));
+    equipmentTab = control(x + 12, y + 38, 79, 18, "Equipment", () -> switchPage(0));
+    bagTab = control(x + 95, y + 38, 75, 18, "Main bag", () -> switchPage(1));
     control(
         x + 174,
         y + 38,
@@ -81,9 +84,9 @@ public final class MainInventoryScreen extends Screen {
           selected = -1;
           switchPage(2);
         });
+    previousBag = nextBag = null;
     if (wide || page == 0) equipmentControls();
     if (wide || page == 1) bagControls();
-    if (wide || page == 2) detailControls();
     control(
         x + pw - 75,
         y + ph - 24,
@@ -184,42 +187,28 @@ public final class MainInventoryScreen extends Screen {
               -1);
       t.bagOffset = i;
     }
-    control(
-        bagX,
-        bottom - 18,
-        23,
-        17,
-        "<",
-        () -> {
-          bagPage = Math.max(0, bagPage - 1);
-          updateTiles();
-        });
-    control(
-        bagX + bagW - 23,
-        bottom - 18,
-        23,
-        17,
-        ">",
-        () -> {
-          bagPage++;
-          updateTiles();
-        });
-  }
-
-  private void detailControls() {
-    int yy = bottom - 58, half = (detailW - 4) / 2;
-    main = control(detailX, yy, half, 17, "Mainhand", () -> equip(Slot.MAINHAND));
-    off = control(detailX + half + 4, yy, half, 17, "Offhand", () -> equip(Slot.OFFHAND));
-    firstAid = control(detailX, yy + 20, half, 17, "First aid", () -> equip(Slot.BANDAGE));
-    unequip = control(detailX + half + 4, yy + 20, half, 17, "To bag", this::unequip);
-    move =
+    previousBag =
         control(
-            detailX,
-            yy + 40,
-            detailW,
+            bagX,
+            bottom - 18,
+            23,
             17,
-            "Select a destination tile",
-            () -> localFeedback = "Select an empty bag tile or a compatible gear slot.");
+            "<",
+            () -> {
+              bagPage = Math.max(0, bagPage - 1);
+              updateTiles();
+            });
+    nextBag =
+        control(
+            bagX + bagW - 23,
+            bottom - 18,
+            23,
+            17,
+            ">",
+            () -> {
+              bagPage++;
+              updateTiles();
+            });
   }
 
   private Tile tile(int xx, int yy, int w, int h, int index) {
@@ -267,39 +256,110 @@ public final class MainInventoryScreen extends Screen {
 
   private void select(int index) {
     if (index < 0) return;
-    if (selected >= 0
-        && selected != index
-        && (index >= InventoryCatalog.BAG_SIZE || entry(index).empty())
-        && !entry(selected).empty()) {
-      localFeedback = "";
-      client.move(selected, index);
-      return;
-    }
     selected = index;
     localFeedback = "";
     if (!wide && !entry(index).empty()) switchPage(2);
   }
 
-  private void equip(Slot slot) {
-    if (selected >= 0) {
+  private boolean ready() {
+    return client.connected()
+        && client.state() != null
+        && !client.pending()
+        && !SkillClient.INSTANCE.committed();
+  }
+
+  private Tile tileAt(double mouseX, double mouseY) {
+    for (Tile tile : tiles)
+      if (tile.visible && tile.index >= 0 && tile.isMouseOver(mouseX, mouseY)) return tile;
+    return null;
+  }
+
+  private void drop(int destination) {
+    boolean allowed = gesture.canDrop(client.state(), destination, ready());
+    var move = gesture.release(client.state(), destination, ready());
+    hoveredNavigation = null;
+    if (move != null) {
       localFeedback = "";
-      client.move(selected, slot.index());
+      client.move(move.source(), move.target());
+    } else if (destination >= 0 && !allowed) {
+      localFeedback = "Move cancelled. Choose a compatible destination.";
+    } else {
+      localFeedback = "Move cancelled.";
     }
   }
 
-  private void unequip() {
-    for (int i = 0; i < InventoryCatalog.BAG_SIZE; i++)
-      if (entry(i).empty()) {
+  private void keyboardTile(int index) {
+    if (gesture.carrying()) {
+      drop(index);
+    } else if (ready() && gesture.begin(client.state(), index, 0, 0, true)) {
+      selected = index;
+      localFeedback = "Item picked up. Tab to a destination; Enter/Space to place; Esc to cancel.";
+    } else {
+      select(index);
+    }
+  }
+
+  @Override
+  public boolean mouseClicked(MouseButtonEvent event, boolean twice) {
+    if (event.button() == 1 && gesture.active()) {
+      gesture.cancel();
+      localFeedback = "Move cancelled.";
+      return true;
+    }
+    Tile tile = tileAt(event.x(), event.y());
+    if (event.button() == 0 && tile != null) {
+      setFocused(tile);
+      if (gesture.keyboard()) drop(tile.index);
+      else {
+        gesture.cancel();
+        selected = tile.index;
         localFeedback = "";
-        client.move(selected, i);
-        return;
+        if (ready()) gesture.begin(client.state(), tile.index, event.x(), event.y(), false);
       }
-    localFeedback = "Main bag is full.";
+      return true;
+    }
+    return super.mouseClicked(event, twice);
+  }
+
+  @Override
+  public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
+    if (event.button() == 0 && gesture.active() && !gesture.keyboard()) {
+      gesture.movePointer(event.x(), event.y());
+      return true;
+    }
+    return super.mouseDragged(event, dx, dy);
+  }
+
+  @Override
+  public boolean mouseReleased(MouseButtonEvent event) {
+    if (event.button() == 0 && gesture.active() && !gesture.keyboard()) {
+      gesture.movePointer(event.x(), event.y());
+      if (gesture.carrying()) {
+        Tile tile = tileAt(event.x(), event.y());
+        drop(tile == null ? -1 : tile.index);
+      } else {
+        int index = gesture.source();
+        gesture.cancel();
+        select(index);
+      }
+      return true;
+    }
+    return super.mouseReleased(event);
+  }
+
+  @Override
+  public void removed() {
+    gesture.cancel();
+    super.removed();
   }
 
   @Override
   public void tick() {
     var state = client.state();
+    if (gesture.active() && !gesture.valid(state, ready())) {
+      gesture.cancel();
+      localFeedback = "Inventory changed or unavailable. Move cancelled.";
+    }
     if (state != null && state.revision() != renderedRevision) {
       renderedRevision = state.revision();
       updateTiles();
@@ -308,6 +368,11 @@ public final class MainInventoryScreen extends Screen {
 
   @Override
   public boolean keyPressed(KeyEvent event) {
+    if (event.key() == 256 && gesture.active()) {
+      gesture.cancel();
+      localFeedback = "Move cancelled.";
+      return true;
+    }
     if ((searchBox == null || !searchBox.isFocused())
         && minecraft.options.keyInventory.matches(event)) {
       onClose();
@@ -352,6 +417,53 @@ public final class MainInventoryScreen extends Screen {
         MUTED,
         pw - 100);
     super.extractRenderState(g, mouseX, mouseY, partial);
+    renderGesture(g, mouseX, mouseY);
+  }
+
+  private void renderGesture(GuiGraphicsExtractor g, int mouseX, int mouseY) {
+    if (!gesture.carrying()) {
+      hoveredNavigation = null;
+      return;
+    }
+    Control navigation = null;
+    for (Control control : new Control[] {equipmentTab, bagTab, previousBag, nextBag}) {
+      if (control != null
+          && control.isMouseOver(mouseX, mouseY)
+          && (control != equipmentTab || !wide && page != 0)
+          && (control != bagTab || !wide && page != 1)) navigation = control;
+    }
+    if (!gesture.keyboard() && navigation != null) {
+      if (navigation != hoveredNavigation) {
+        hoveredNavigation = navigation;
+        navigationSince = System.nanoTime();
+      } else if (System.nanoTime() - navigationSince >= 400_000_000L) {
+        hoveredNavigation = null;
+        navigation.action.run();
+      }
+    } else hoveredNavigation = null;
+    Tile target =
+        gesture.keyboard() && getFocused() instanceof Tile tile ? tile : tileAt(mouseX, mouseY);
+    boolean valid = target != null && gesture.canDrop(client.state(), target.index, ready());
+    String hint =
+        navigation != null
+            ? "Hold to change view"
+            : target == null
+                ? "Release outside slots to cancel"
+                : target.index == gesture.source()
+                    ? "Return to source to cancel"
+                    : valid ? "Place in " + target.label() : "Cannot place here";
+    g.nextStratum();
+    int anchorX = gesture.keyboard() ? target == null ? x + pw - 42 : target.getRight() : mouseX;
+    int anchorY = gesture.keyboard() ? target == null ? y + 46 : target.getY() + 8 : mouseY;
+    int xx = Math.clamp(anchorX + 12, 2, width - 22);
+    int yy = Math.clamp(anchorY - 8, 2, height - 22);
+    g.fill(xx - 2, yy - 2, xx + 20, yy + 20, INK);
+    g.outline(xx - 2, yy - 2, 22, 22, BRASS);
+    drawItem(g, gesture.carried(), xx, yy);
+    if (gesture.carried().quantity() > 1)
+      text(g, "" + gesture.carried().quantity(), xx + 4, yy + 10, IVORY, 18);
+    g.fill(x + 12, bottom + 8, x + pw - 82, y + ph - 7, INK);
+    text(g, hint, x + 12, y + ph - 19, valid ? TEAL : IVORY, pw - 100);
   }
 
   private void renderEquipment(GuiGraphicsExtractor g, int mouseX, int mouseY) {
@@ -376,21 +488,8 @@ public final class MainInventoryScreen extends Screen {
   }
 
   private void renderDetails(GuiGraphicsExtractor g) {
-    boolean ready =
-        client.state() != null && !client.pending() && !SkillClient.INSTANCE.committed();
     var selectedEntry = entry(selected);
     var definition = selectedEntry.empty() ? null : InventoryCatalog.item(selectedEntry.item());
-    main.active =
-        ready && definition != null && definition.weapon() && selected != Slot.MAINHAND.index();
-    off.active =
-        ready
-            && definition != null
-            && definition.weapon()
-            && !definition.locksOffhand()
-            && selected != Slot.OFFHAND.index();
-    firstAid.active = ready && selectedEntry.item() == 9 && selected != Slot.BANDAGE.index();
-    unequip.active = ready && definition != null && selected >= InventoryCatalog.BAG_SIZE;
-    move.active = ready && definition != null;
     text(
         g,
         definition == null ? "CURRENT CHARACTER" : "ITEM INSPECTION",
@@ -426,7 +525,7 @@ public final class MainInventoryScreen extends Screen {
       }
       wrapped(
           g,
-          "Select a weapon to inspect and equip it.",
+          "Click to inspect. Drag items onto bag or gear slots. Keyboard: Tab, then Enter/Space to pick and place.",
           detailX,
           yy + 12,
           detailW,
@@ -454,6 +553,14 @@ public final class MainInventoryScreen extends Screen {
       if (bottom - yy > 120)
         yy = wrapped(g, definition.description(), detailX, yy + 10, detailW, MUTED, bottom - 80);
       text(g, "Kept on death", detailX, Math.min(yy + 9, bottom - 73), TEAL, detailW);
+      wrapped(
+          g,
+          "Drag to a slot. Enter/Space picks up or places; Esc cancels.",
+          detailX,
+          bottom - 49,
+          detailW,
+          MUTED,
+          bottom);
     }
   }
 
@@ -535,15 +642,17 @@ public final class MainInventoryScreen extends Screen {
 
     void updateMessage() {
       var value = entry(index);
-      String label =
-          index >= InventoryCatalog.BAG_SIZE
-              ? Slot.values()[index - InventoryCatalog.BAG_SIZE].title()
-              : "Bag slot " + (index + 1);
       setMessage(
           styled(
-              label
+              label()
                   + ": "
                   + (value.empty() ? "Empty" : InventoryCatalog.item(value.item()).title())));
+    }
+
+    String label() {
+      return index >= InventoryCatalog.BAG_SIZE
+          ? Slot.values()[index - InventoryCatalog.BAG_SIZE].title()
+          : "Bag slot " + (index + 1);
     }
 
     @Override
@@ -554,7 +663,7 @@ public final class MainInventoryScreen extends Screen {
     @Override
     public boolean keyPressed(KeyEvent event) {
       if (isFocused() && (event.key() == 257 || event.key() == 335 || event.key() == 32)) {
-        select(index);
+        keyboardTile(index);
         return true;
       }
       return false;
@@ -577,6 +686,13 @@ public final class MainInventoryScreen extends Screen {
           selectedTile ? 0xFF34352C : isHoveredOrFocused() ? 0xFF293A42 : PANEL);
       g.outline(
           getX(), getY(), getWidth(), getHeight(), selectedTile || isFocused() ? BRASS : LINE);
+      if (gesture.carrying() && index != gesture.source()) {
+        boolean compatible = gesture.canDrop(client.state(), index, ready());
+        g.outline(getX(), getY(), getWidth(), getHeight(), compatible ? TEAL : LINE);
+        if (isHoveredOrFocused()) {
+          text(g, compatible ? "+" : "X", getRight() - 9, getY() + 2, compatible ? TEAL : IVORY, 8);
+        }
+      }
       boolean gear = index >= InventoryCatalog.BAG_SIZE;
       if (gear) {
         String label = Slot.values()[index - InventoryCatalog.BAG_SIZE].title();
@@ -602,7 +718,7 @@ public final class MainInventoryScreen extends Screen {
         if (value.quantity() > 1)
           text(g, "" + value.quantity(), getRight() - 16, getBottom() - 10, IVORY, 16);
       }
-      if (isHoveredOrFocused()) {
+      if (isHoveredOrFocused() && !gesture.carrying()) {
         var lines = new ArrayList<Component>();
         lines.add(getMessage());
         if (!value.empty()) lines.add(styled(InventoryCatalog.item(value.item()).description()));

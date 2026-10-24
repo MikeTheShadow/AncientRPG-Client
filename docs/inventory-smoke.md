@@ -8,9 +8,8 @@ and one example of each of the eight weapon families.
 ## Launch
 
 From the coordination workspace, use `python3 test.py` for normal matching builds
-and a local playable session. In the current agent workspace, direct Java/JAR
-fallback artifacts have also been prepared for `python3 test.py --skip-build`.
-These are not evidence that the Gradle tasks passed. Do not mix older client/server
+and a local playable session. Matching Gradle artifacts have also been prepared
+for `python3 test.py --skip-build`. Do not mix older client/server
 JARs; exact release, protocol, registry IDs and content must match.
 
 Press the normal **Inventory** binding (E by default). On a matching connection it
@@ -22,10 +21,18 @@ The smallest layout uses a labelled equipment grid instead of a squeezed model.
 
 1. Inspect the player model, typography, slot labels, tab focus, search and category
    filter. Increase GUI scale and resize the window; text/actions must remain reachable.
-2. In Main bag, select Practice Sword and choose **Mainhand**. Select its slot again
-   to inspect it; **To bag** unequips. Selecting an item and then an empty bag tile
-   or compatible equipment slot also requests a move. Tab + Enter/Space activates
-   the same controls. **Stats** returns to the character view.
+2. In Main bag, drag Practice Sword onto **Mainhand**. Drag it back to a bag tile
+   to unequip. The carried icon, compatible outlines and destination label provide
+   feedback; the server confirms each move. Click to inspect without moving.
+   Keyboard: Tab to an item, Enter/Space to pick up, then Tab to the destination
+   and Enter/Space to place. **Stats** returns to the character view.
+   In compact layouts, hold the dragged item over **Equipment** or **Main bag**
+   for a moment to switch views. The bag page arrows also support hover navigation.
+   Keyboard users can activate tabs and page arrows while carrying an item.
+   Release outside slots or onto the source to cancel; Escape or right-click
+   cancels a carried item. Escape closes the screen once no item is carried.
+   Test occupied-slot swaps, invalid targets and whole-stack bandage movement;
+   no client-side split, discard or optimistic ownership change is available.
 3. Equip each family: sword, dagger, axe, greatsword, greataxe, hammer, spear, rapier.
    Compare authored model silhouettes, held position and offhand labels. New weapon
    combat skills are not part of this inventory slice.
@@ -51,8 +58,11 @@ remain separate reviewed changes.
 
 ## Evidence still required
 
-The agent executed compilation, codec/model/persistence/Minestom adapter tests and
-artifact inspection. Graphical Fabric/Mixin behavior, actual player-model/item/font
-rendering, mouse and keyboard feel, all resolutions, two real clients, death/respawn
-and Windows remain unverified until exercised and recorded. Screenshots of the real
-Fabric screen are required before accepting the global style.
+The agent executed Gradle builds, codec/model/persistence/Minestom adapter tests,
+gesture tests and artifact inspection. A packaged Fabric client on Linux under
+Xvfb/software rendering connected to an isolated local-profile server: pointer
+equip, keyboard unequip, compact hover-tab equip, outside-drop cancellation and
+Escape cancellation passed, with saved revisions checked. Real-screen captures
+are recorded in the private coordination workspace. Full visual/input acceptance,
+all resolutions, two real clients, death/respawn and Windows remain unverified.
+The user's permanent global-style review remains open.

@@ -1,5 +1,7 @@
 package dev.ancientrpg.client;
 
+import static dev.ancientrpg.client.ClientText.tr;
+
 import dev.ancientrpg.protocol.Interaction;
 import dev.ancientrpg.protocol.InteractionResult;
 import dev.ancientrpg.protocol.PublicContent;
@@ -12,7 +14,6 @@ import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.block.Block;
 
@@ -38,9 +39,7 @@ public final class AncientRpgClient implements ClientModInitializer {
         DemoPayloads.Hello.TYPE,
         (payload, context) -> {
           if (responded) {
-            context
-                .responseSender()
-                .disconnect(Component.literal("Duplicate AncientRPG handshake"));
+            context.responseSender().disconnect(tr("connection.duplicate"));
             return;
           }
           responded = true;
@@ -81,10 +80,12 @@ public final class AncientRpgClient implements ClientModInitializer {
                           .gui
                           .hud
                           .setOverlayMessage(
-                              Component.literal(
+                              tr(
                                   result.status() == InteractionResult.Status.DENIED
-                                      ? "Interaction denied"
-                                      : "Ancient Switch: " + (result.active() ? "On" : "Off")),
+                                      ? "interaction.denied"
+                                      : result.active()
+                                          ? "interaction.switch_on"
+                                          : "interaction.switch_off"),
                               true));
         });
     UseBlockCallback.EVENT.register(

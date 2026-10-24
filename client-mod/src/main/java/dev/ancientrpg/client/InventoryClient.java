@@ -1,12 +1,16 @@
 package dev.ancientrpg.client;
 
+import static dev.ancientrpg.client.ClientText.tr;
+
 import dev.ancientrpg.protocol.InventoryRequest;
 import dev.ancientrpg.protocol.InventoryWire;
+import java.util.Locale;
 import java.util.function.LongSupplier;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.minecraft.network.chat.Component;
 
 /** Presentation cache only. Moves wait for the server's durable authoritative response. */
 public final class InventoryClient {
@@ -14,7 +18,7 @@ public final class InventoryClient {
   private InventoryWire.State state;
   private LongSupplier sequence;
   private long pending = -1, pendingAt, lastResponse = -1;
-  private String feedback = "Waiting for inventory...";
+  private Component feedback = tr("inventory.waiting");
 
   private InventoryClient() {}
 
@@ -26,7 +30,7 @@ public final class InventoryClient {
     return pending >= 0;
   }
 
-  public String feedback() {
+  public Component feedback() {
     return feedback;
   }
 
@@ -48,7 +52,7 @@ public final class InventoryClient {
         client -> {
           if (pending >= 0 && System.nanoTime() - pendingAt > 5_000_000_000L) {
             pending = -1;
-            feedback = "No reply yet. Refresh before retrying.";
+            feedback = tr("inventory.timeout");
           }
         });
   }
@@ -59,14 +63,14 @@ public final class InventoryClient {
     state = incoming;
     if (incoming.sequence() >= 0) lastResponse = incoming.sequence();
     if (incoming.sequence() == pending) pending = -1;
-    feedback = incoming.result().message();
+    feedback = tr("inventory.result." + incoming.result().name().toLowerCase(Locale.ROOT));
   }
 
   private void reset() {
     state = null;
     pending = -1;
     lastResponse = -1;
-    feedback = "Waiting for inventory...";
+    feedback = tr("inventory.waiting");
   }
 
   public void sync() {
@@ -88,6 +92,6 @@ public final class InventoryClient {
     ClientPlayNetworking.send(
         new InventoryPayloads.Request(
             new InventoryRequest(pending, state == null ? 0 : state.revision(), sync, from, to)));
-    feedback = sync ? "Synchronizing..." : "Saving equipment...";
+    feedback = tr(sync ? "inventory.synchronizing" : "inventory.saving");
   }
 }

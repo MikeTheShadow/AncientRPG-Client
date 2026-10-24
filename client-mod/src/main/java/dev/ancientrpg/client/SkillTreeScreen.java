@@ -1,5 +1,7 @@
 package dev.ancientrpg.client;
 
+import static dev.ancientrpg.client.ClientText.tr;
+
 import dev.ancientrpg.protocol.Skill;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -18,12 +20,8 @@ public final class SkillTreeScreen extends Screen {
       WHITE = 0xFFE7EFF1,
       MUTED = 0xFF9AAEB9;
   private static final int[] REQUIREMENTS = {0, 1, 1, 2, 4 | 8};
-  private static final String[] DAMAGE = {"10", "8 x 3 targets", "16", "7 + 7", "24 x 3 targets"};
-  private static final String[] COOLDOWN = {"0.60s", "2.50s", "2.00s", "3.00s", "5.00s"};
-  private static final String[] CARRY = {"0.7m", "1.1m", "2.8m", "0.75 + 0.85m", "2.2m"};
-  private static final String[] REQUIRES = {
-    "Starting skill", "Quick Cut", "Quick Cut", "Sweeping Arc", "Twin Fang + Piercing Thrust"
-  };
+  private static final double[] COOLDOWN = {.6, 2.5, 2, 3, 5};
+  private static final String[] CARRY = {"0.7", "1.1", "2.8", "0.75", "2.2"};
   private final Card[] nodes = new Card[5];
   private Skill selected = Skill.QUICK_CUT;
   private Card learn;
@@ -31,7 +29,7 @@ public final class SkillTreeScreen extends Screen {
   private boolean tree;
 
   public SkillTreeScreen() {
-    super(Component.literal("Sword Arts"));
+    super(tr("skills.title"));
   }
 
   @Override
@@ -61,7 +59,13 @@ public final class SkillTreeScreen extends Screen {
       nodes[i] =
           addRenderableWidget(
               new Card(
-                  nx, ny, nodeWidth, nodeHeight, skill.title(), () -> selected = skill, skill));
+                  nx,
+                  ny,
+                  nodeWidth,
+                  nodeHeight,
+                  ClientText.skill(skill),
+                  () -> selected = skill,
+                  skill));
     }
     learn =
         addRenderableWidget(
@@ -70,10 +74,12 @@ public final class SkillTreeScreen extends Screen {
                 y + panelHeight - 35,
                 detailWidth,
                 24,
-                "Learn skill",
+                tr("skills.learn"),
                 () -> SkillClient.INSTANCE.unlock(selected),
                 null));
-    addRenderableWidget(new Card(x + panelWidth - 28, y + 10, 18, 18, "x", this::onClose, null));
+    addRenderableWidget(
+        new Card(
+            x + panelWidth - 28, y + 10, 18, 18, tr("common.close_icon"), this::onClose, null));
   }
 
   @Override
@@ -99,10 +105,10 @@ public final class SkillTreeScreen extends Screen {
     g.fill(x + 4, y + 5, x + panelWidth + 4, y + panelHeight + 5, 0x66000000);
     g.fill(x, y, x + panelWidth, y + panelHeight, INK);
     g.fill(x, y, x + 3, y + 31, GOLD);
-    text(g, "SWORD ARTS", x + 12, y + 11, GOLD);
+    text(g, tr("skills.heading"), x + 12, y + 11, GOLD);
     text(
         g,
-        state == null ? "Synchronizing..." : state.points() + " POINTS AVAILABLE",
+        state == null ? tr("skills.synchronizing") : tr("skills.points", state.points()),
         x + 12,
         y + 26,
         MUTED);
@@ -116,36 +122,41 @@ public final class SkillTreeScreen extends Screen {
       connect(g, 2, 4);
     }
     int i = selected.ordinal(), dy = y + 49;
-    for (var line : font.split(Component.literal(selected.title()), detailWidth)) {
+    for (var line : font.split(ClientText.skill(selected), detailWidth)) {
       g.text(font, line, detailX, dy, WHITE, false);
       dy += 10;
     }
     dy += 5;
     if (panelHeight >= 260) {
-      for (var line : font.split(Component.literal(selected.description()), detailWidth)) {
+      for (var line : font.split(ClientText.skillDescription(selected), detailWidth)) {
         g.text(font, line, detailX, dy, MUTED, false);
         dy += 10;
       }
       dy += 9;
     }
-    stat(g, "DAMAGE", DAMAGE[i], dy);
+    stat(g, tr("skills.damage"), damage(selected), dy);
     dy += 16;
-    stat(g, "COOLDOWN", COOLDOWN[i], dy);
+    stat(g, tr("skills.cooldown"), ClientText.seconds(COOLDOWN[i], 2), dy);
+    dy += 16;
+    stat(g, tr("skills.action"), ClientText.seconds(selected.duration() / 20.0, 2), dy);
     dy += 16;
     stat(
-        g, "ACTION", String.format(java.util.Locale.ROOT, "%.2fs", selected.duration() / 20.0), dy);
-    dy += 16;
-    stat(g, "CARRY", CARRY[i], dy);
+        g,
+        tr("skills.carry"),
+        selected == Skill.TWIN_FANG
+            ? tr("skills.carry.pair", CARRY[i], "0.85")
+            : tr("format.distance", CARRY[i]),
+        dy);
     dy += 19;
     text(
         g,
-        learned(selected) ? "ART LEARNED" : "REQUIRES",
+        learned(selected) ? tr("skills.art_learned") : tr("skills.requires"),
         detailX,
         dy,
         learned(selected) ? TEAL : GOLD);
     if (!learned(selected)) {
       dy += 11;
-      for (var line : font.split(Component.literal(REQUIRES[i]), detailWidth)) {
+      for (var line : font.split(requirements(selected), detailWidth)) {
         if (dy + 9 > y + panelHeight - 40) break;
         g.text(font, line, detailX, dy, MUTED, false);
         dy += 10;
@@ -158,34 +169,57 @@ public final class SkillTreeScreen extends Screen {
             && state.points() > 0
             && !SkillClient.INSTANCE.pending()
             && state.action() == null;
-    String action =
+    Component action =
         state == null
-            ? "Synchronizing"
+            ? tr("skills.synchronizing")
             : SkillClient.INSTANCE.pending()
-                ? "Awaiting server"
+                ? tr("skills.awaiting")
                 : learned(selected)
-                    ? "Learned"
+                    ? tr("skills.learned")
                     : !available(selected)
-                        ? "Path locked"
+                        ? tr("skills.path_locked")
                         : state.action() != null
-                            ? "Finish current art"
-                            : state.points() == 0 ? "No points" : "Learn / 1 point";
-    learn.setMessage(Component.literal(action));
-    String feedback = SkillClient.INSTANCE.feedback();
+                            ? tr("skills.busy")
+                            : state.points() == 0
+                                ? tr("skills.no_points")
+                                : tr("skills.learn_cost");
+    learn.setMessage(action);
+    Component feedback = SkillClient.INSTANCE.feedback();
     text(
         g,
-        font.plainSubstrByWidth(
-            feedback.isEmpty() ? "Select an art to inspect" : feedback, graphWidth - 20),
+        feedback.getString().isEmpty() ? tr("skills.inspect") : feedback,
         x + 10,
         y + panelHeight - 20,
         MUTED);
     super.extractRenderState(g, mouseX, mouseY, partial);
   }
 
-  private void stat(GuiGraphicsExtractor g, String label, String value, int yy) {
-    // Small screens stack values beside a shorter label rather than overflowing the panel.
-    if (font.width(label) + font.width(value) + 8 > detailWidth) label = label.substring(0, 3);
-    text(g, label, detailX, yy, MUTED);
+  private static Component damage(Skill skill) {
+    return switch (skill) {
+      case QUICK_CUT -> tr("skills.damage.single", 10);
+      case SWEEPING_ARC -> tr("skills.damage.targets", 8, 3);
+      case PIERCING_THRUST -> tr("skills.damage.single", 16);
+      case TWIN_FANG -> tr("skills.damage.pair", 7, 7);
+      case CRESCENT_FINISH -> tr("skills.damage.targets", 24, 3);
+    };
+  }
+
+  private static Component requirements(Skill skill) {
+    return switch (skill) {
+      case QUICK_CUT -> tr("skills.starting");
+      case SWEEPING_ARC, PIERCING_THRUST -> ClientText.skill(Skill.QUICK_CUT);
+      case TWIN_FANG -> ClientText.skill(Skill.SWEEPING_ARC);
+      case CRESCENT_FINISH ->
+          tr(
+              "skills.require_pair",
+              ClientText.skill(Skill.TWIN_FANG),
+              ClientText.skill(Skill.PIERCING_THRUST));
+    };
+  }
+
+  private void stat(GuiGraphicsExtractor g, Component label, Component value, int yy) {
+    var lines = font.split(label, Math.max(1, detailWidth - font.width(value) - 8));
+    if (!lines.isEmpty()) g.text(font, lines.getFirst(), detailX, yy, MUTED, false);
     text(g, value, detailX + detailWidth - font.width(value), yy, WHITE);
   }
 
@@ -200,16 +234,17 @@ public final class SkillTreeScreen extends Screen {
     g.fill(bx, mid, bx + 1, by, color);
   }
 
-  private void text(GuiGraphicsExtractor g, String value, int xx, int yy, int color) {
-    g.text(font, value, xx, yy, color, false);
+  private void text(GuiGraphicsExtractor g, Component value, int xx, int yy, int color) {
+    var lines = font.split(value, Math.max(1, x + panelWidth - 10 - xx));
+    if (!lines.isEmpty()) g.text(font, lines.getFirst(), xx, yy, color, false);
   }
 
   private final class Card extends AbstractWidget {
     private final Runnable press;
     private final Skill skill;
 
-    Card(int xx, int yy, int w, int h, String label, Runnable press, Skill skill) {
-      super(xx, yy, w, h, Component.literal(label));
+    Card(int xx, int yy, int w, int h, Component label, Runnable press, Skill skill) {
+      super(xx, yy, w, h, label);
       this.press = press;
       this.skill = skill;
     }
@@ -248,15 +283,19 @@ public final class SkillTreeScreen extends Screen {
         g.fill(xx, yy, getRight(), yy + 1, accent);
         g.fill(xx, getBottom() - 1, getRight(), getBottom(), accent);
       }
-      String label = font.plainSubstrByWidth(getMessage().getString(), getWidth() - 12);
-      text(
-          g,
+      var label = font.split(getMessage(), getWidth() - 12).getFirst();
+      g.text(
+          font,
           label,
           xx + 6,
           yy + (skill == null ? (getHeight() - 8) / 2 : 4),
-          active ? WHITE : MUTED);
+          active ? WHITE : MUTED,
+          false);
       if (skill != null) {
-        String status = learned(skill) ? "LEARNED" : available(skill) ? "1 POINT" : "LOCKED";
+        Component status =
+            learned(skill)
+                ? tr("skills.card.learned")
+                : available(skill) ? tr("skills.card.cost") : tr("skills.card.locked");
         text(g, status, xx + 6, getBottom() - 10, learned(skill) ? TEAL : MUTED);
       }
     }

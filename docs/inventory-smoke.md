@@ -14,18 +14,24 @@ JARs; exact release, protocol, registry IDs and content must match.
 
 Press the normal **Inventory** binding (E by default). On a matching connection it
 opens the native AncientRPG dossier. At larger scaled windows, equipment, bag and
-inspection appear together; smaller layouts use Equipment / Main bag / Stats tabs.
+inspection appear together; smaller layouts use Equipment / Main bag / Details tabs.
 The smallest layout uses a labelled equipment grid instead of a squeezed model.
+Health/max health and current weapon family appear with the equipment. Attribute
+scaling is still unavailable; the screen does not invent stat values.
 
 ## Review sequence
 
 1. Inspect the player model, typography, slot labels, tab focus, search and category
    filter. Increase GUI scale and resize the window; text/actions must remain reachable.
+   Main bag should visibly select its tab and focus search even in the wide layout.
+   Search for an absent item: verify the empty-result explanation and clear-search
+   control. Page arrows are disabled at their bounds, and the page count shows
+   current/total pages. At a small enough size, verify actual next/previous pages.
 2. In Main bag, drag Practice Sword onto **Mainhand**. Drag it back to a bag tile
    to unequip. The carried icon, compatible outlines and destination label provide
    feedback; the server confirms each move. Click to inspect without moving.
    Keyboard: Tab to an item, Enter/Space to pick up, then Tab to the destination
-   and Enter/Space to place. **Stats** returns to the character view.
+   and Enter/Space to place. **Details** opens item inspection in compact layouts.
    In compact layouts, hold the dragged item over **Equipment** or **Main bag**
    for a moment to switch views. The bag page arrows also support hover navigation.
    Keyboard users can activate tabs and page arrows while carrying an item.
@@ -55,6 +61,12 @@ Current health/max health come from the server. Attribute formulas and gear scal
 are intentionally shown as unavailable rather than filled with illustrative values.
 Temporary world materials, secured storage, new combat abilities and healing use
 remain separate reviewed changes.
+
+All client-owned screen/HUD text, item/skill descriptions, feedback, tooltips and
+narration resolve through `assets/ancientrpg/lang/en_us.json`; see
+[localization](localization.md). The main inventory omits retention labels without
+changing persistence or death behavior. A pending move retains confirmed contents
+and marks its source/destination until the server replies.
 
 ## Evidence still required
 

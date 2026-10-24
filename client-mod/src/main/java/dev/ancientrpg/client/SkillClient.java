@@ -1,5 +1,7 @@
 package dev.ancientrpg.client;
 
+import static dev.ancientrpg.client.ClientText.tr;
+
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.ancientrpg.protocol.Skill;
@@ -22,6 +24,7 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -38,7 +41,7 @@ public final class SkillClient {
   private LongSupplier sequence;
   private SkillWire.State state;
   private long serverTick, receivedAt;
-  private String feedback = "";
+  private Component feedback = Component.empty();
   private long feedbackUntil;
   private long pendingUnlock = -1, pendingAt;
 
@@ -106,7 +109,7 @@ public final class SkillClient {
     order.clear();
     effectTicks.clear();
     pendingUnlock = -1;
-    feedback = "";
+    feedback = Component.empty();
   }
 
   private void clock(long tick) {
@@ -188,8 +191,7 @@ public final class SkillClient {
               actor, SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.5f, 1.0f);
         if (mc.player != null && event.actor() == mc.player.getId()) {
           int damage = event.hits().stream().mapToInt(SkillWire.Hit::damage).sum();
-          message(
-              damage == 0 ? "Miss" : damage + " damage · " + event.hits().size() + " target(s)");
+          message(damage == 0 ? tr("skills.miss") : tr("skills.hit", damage, event.hits().size()));
         }
       }
     }
@@ -235,7 +237,7 @@ public final class SkillClient {
     }
     if (pending() && System.nanoTime() - pendingAt > 2_000_000_000L) {
       pendingUnlock = -1;
-      message("Unlock not confirmed; try again");
+      message(tr("skills.unlock_timeout"));
     }
     if (mc.level == null) return;
     actions.entrySet().removeIf(e -> mc.level.getEntity(e.getKey()) == null);
@@ -282,52 +284,47 @@ public final class SkillClient {
       g.fill(x, y, x + width - 2, y + 28, learned ? 0xCC153D43 : 0xCC252932);
       g.text(
           mc.font,
-          binding(i) + " " + new String[] {"Cut", "Arc", "Thrust", "Twin", "Finish"}[i],
+          tr(
+              "hud.binding_skill",
+              binding(i),
+              tr("skill." + skill.name().toLowerCase(Locale.ROOT) + ".short")),
           x + 4,
           y + 4,
           learned ? 0xFF80DDD0 : 0xFF888888);
-      String status =
+      Component status =
           !learned
-              ? "Locked"
-              : remaining > 0 ? String.format(Locale.ROOT, "%.1fs", remaining / 20.0) : "Ready";
+              ? tr("hud.locked")
+              : remaining > 0 ? ClientText.seconds(remaining / 20.0, 1) : tr("hud.ready");
       g.text(mc.font, status, x + 4, y + 16, 0xFFE7EDF0);
     }
     if (state.queued() != null)
-      g.text(mc.font, "Next: " + state.queued().skill().title(), left, y - 40, 0xFF80DDD0);
+      g.text(
+          mc.font,
+          tr("hud.next", ClientText.skill(state.queued().skill())),
+          left,
+          y - 40,
+          0xFF80DDD0);
     if (state.action() != null) {
       double p =
           Math.clamp(
               (visualTick() - state.action().start()) / state.action().skill().duration(), 0, 1);
       g.fill(left, y - 5, left + (int) (width * 5 * p), y - 2, 0xFFE8BD69);
-      g.text(mc.font, state.action().skill().title(), left, y - 16, 0xFFE8BD69);
+      g.text(mc.font, ClientText.skill(state.action().skill()), left, y - 16, 0xFFE8BD69);
     }
     if (System.nanoTime() < feedbackUntil) g.text(mc.font, feedback, left, y - 28, 0xFFFFFFFF);
-    g.text(mc.font, binding(5) + " · Sword tree", left, y + 31, 0xFFA7B8BB);
+    g.text(mc.font, tr("hud.tree", binding(5)), left, y + 31, 0xFFA7B8BB);
   }
 
-  private void message(String text) {
+  private void message(Component text) {
     feedback = text;
     feedbackUntil = System.nanoTime() + 2_000_000_000L;
   }
 
-  public String feedback() {
-    return System.nanoTime() < feedbackUntil ? feedback : "";
+  public Component feedback() {
+    return System.nanoTime() < feedbackUntil ? feedback : Component.empty();
   }
 
-  private static String reason(SkillWire.Reason r) {
-    return switch (r) {
-      case LOCKED -> "Learn this skill first";
-      case PREREQUISITES -> "Learn the required skills first";
-      case POINTS -> "No practice points remaining";
-      case ALREADY_LEARNED -> "Already learned";
-      case BUSY -> "Finish your current action";
-      case COOLDOWN -> "Skill is cooling down";
-      case INELIGIBLE -> "Hold the practice sword with an empty offhand";
-      case QUEUE_PRESSURE -> "Too many requests; try again";
-      case DUPLICATE -> "Request already handled";
-      case QUEUED -> "Next skill queued";
-      case BUFFER_FULL -> "A follow-up is already queued";
-      case OK -> "";
-    };
+  private static Component reason(SkillWire.Reason r) {
+    return tr("skills.reason." + r.name().toLowerCase(Locale.ROOT));
   }
 }

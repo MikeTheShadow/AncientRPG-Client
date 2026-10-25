@@ -2,7 +2,16 @@
 
 Public, source-available Fabric client and pure Java protocol contracts. First-party
 code and assets are All Rights Reserved; see LICENSE and THIRD_PARTY_NOTICES.md.
-Domain, GitHub remote, copyright holder, and publishing remain TODOs.
+GitHub: [AncientRPG-Client](https://github.com/MikeTheShadow/AncientRPG-Client).
+The final domain and named copyright holder remain unresolved.
+
+## Playtesting
+
+Download the public Prism import ZIP from [Releases](https://github.com/MikeTheShadow/AncientRPG-Client/releases)
+and follow the [tester quickstart](docs/tester-quickstart.md). No build is needed.
+To reproduce the local debug world, approved testers use the separate private
+[server playtest bundle](https://github.com/MikeTheShadow/AncientRPG-Server/releases).
+Both routes use the same pinned client. The current snapshot is on `playtest`.
 
 ## Initial Setup Demo
 
@@ -62,8 +71,8 @@ Java 25 indexing, local overrides, and verification. Read `AGENTS.md` before cha
 - `client-mod/`: Fabric registration, configuration/play payloads, and input/rendering adapters.
 - `docs/protocol.md`: wire format and compatibility rules.
 
-The prepared GitHub Actions workflow checks Linux and Windows. Hosted execution,
-remote setup, branch protection, and artifact publishing remain TODOs. Never add
+GitHub Actions builds and packages the client on Linux and Windows. Branch
+protection remains a repository-owner follow-up. Never add
 private server code, encounter logic, or credentials to this repository.
 
 ## One-Handed Sword Training

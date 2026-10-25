@@ -1,5 +1,5 @@
 name: Build
-# Hosting/branch protection activation remains TODO.
+# Build the public client independently; no private checkout is required.
 on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
@@ -18,4 +18,17 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Build and verify
         shell: bash
-        run: ./gradlew --no-daemon build spotlessCheck
+        run: ./gradlew --no-daemon build spotlessCheck :client-mod:prepareDemoMods
+      - name: Verify public package boundaries
+        shell: bash
+        run: python -m unittest discover -s tools -p "test_package*.py"
+      - name: Package public Prism instance
+        shell: bash
+        run: python tools/package_client.py --output dist/AncientRPG-client-prism.zip
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ancientrpg-client-${{ runner.os }}
+          path: |
+            dist/AncientRPG-client-prism.zip
+            dist/AncientRPG-client-prism.zip.sha256
+          if-no-files-found: error

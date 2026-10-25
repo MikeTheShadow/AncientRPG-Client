@@ -8,3 +8,9 @@ run/
 .env.*
 !.env.example
 *.log
+
+# Generated public playtest distributions
+/dist/
+
+__pycache__/
+*.pyc

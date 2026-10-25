@@ -5,8 +5,10 @@ The JAR is extracted from the locally installed Gradle 9.6.0 distribution; stand
 Gradle launchers retain their original copyright and license headers.
 See https://github.com/gradle/gradle/blob/v9.6.0/LICENSE .
 
-Dependencies retain their upstream licenses. TODO: collect dependency notices
-from the resolved distribution before packaging/releasing.
+Dependencies retain their upstream licenses and embedded notices in their JARs.
+The private runtime packager also extracts embedded dependency license/notice files
+into `notices/dependencies/`. Public packs preserve the original Fabric API JAR
+and nested protocol/font notices. Review resolved dependencies when upgrading.
 
 The inventory dossier bundles unmodified Liberation Sans Regular (Liberation Fonts),
 licensed under SIL Open Font License 1.1. Copyright and full terms are bundled at
